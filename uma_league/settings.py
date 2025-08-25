@@ -48,3 +48,12 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 # 从环境变量读取可信域名，逗号分隔，必须带协议（https://）
 _raw = os.getenv("CSRF_TRUSTED_ORIGINS", "")
 CSRF_TRUSTED_ORIGINS = [x.strip() for x in _raw.split(",") if x.strip()]
+
+# 静态文件
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]
+
+# 让 WhiteNoise 提供压缩+带指纹的静态资源（生产环境推荐）
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
