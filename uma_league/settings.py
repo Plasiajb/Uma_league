@@ -39,3 +39,12 @@ if os.getenv("DATABASE_URL"):
 LANGUAGE_CODE="zh-hans"; TIME_ZONE="Europe/Stockholm"; USE_I18N=True; USE_TZ=True
 STATIC_URL="/static/"; STATIC_ROOT=BASE_DIR/"staticfiles"; STATICFILES_DIRS=[BASE_DIR/"static"]
 DEFAULT_AUTO_FIELD="django.db.models.BigAutoField"
+
+import os
+
+# 反向代理下让 Django 识别 HTTPS（Railway/Nginx 常用）
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# 从环境变量读取可信域名，逗号分隔，必须带协议（https://）
+_raw = os.getenv("CSRF_TRUSTED_ORIGINS", "")
+CSRF_TRUSTED_ORIGINS = [x.strip() for x in _raw.split(",") if x.strip()]
