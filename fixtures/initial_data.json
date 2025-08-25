@@ -882,3 +882,17 @@
     }
   }
 ]
+[
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "username": "PLASIA",
+      "password": "pbkdf2_sha256$720000$4BNfdwz1bGua1NKRCp7Uqj$qwXAmhOcs2gtmxtZPT4WbGm6wcRVNetwFwYBDCoTzm4=", 
+      "is_superuser": true,
+      "is_staff": true,
+      "is_active": true,
+      "email": "admin@example.com"
+    }
+  }
+]
