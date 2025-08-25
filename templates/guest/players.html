@@ -1,0 +1,13 @@
+
+{% extends "guest/base.html" %}
+{% block content %}
+<h2>选手赛季战绩一览</h2>
+<table>
+  <thead><tr><th>选手</th><th>参与赛事数</th><th>累计奖金（¥）</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr><td>{{ r.player }}</td><td>{{ r.events }}</td><td>{{ r.total|floatformat:2 }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

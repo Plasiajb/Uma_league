@@ -1,0 +1,11 @@
+
+{% extends "guest/base.html" %}
+{% block content %}
+<h2>注册</h2>
+<form method="post">{% csrf_token %}
+  <label>用户名 <input name="username" required></label>
+  <label>密码 <input name="password" type="password" required></label>
+  <label>选手显示名 <input name="display_name" required></label>
+  <button type="submit">注册</button>
+</form>
+{% endblock %}

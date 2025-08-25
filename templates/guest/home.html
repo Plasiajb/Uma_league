@@ -1,0 +1,16 @@
+
+{% extends "guest/base.html" %}
+{% block content %}
+  {% if stage %}
+    <h2>当前赛段</h2>
+    <p>赛季：{{ stage.season.name }} | 月份：{{ stage.month }} | 类型：{{ stage.get_type_display }} | 赛道：<strong>{{ stage.track_name }}</strong></p>
+    <h3>赛事列表</h3>
+    <ul>
+      {% for e in events %}
+        <li><a href="/event/{{ e.id }}/">{{ e.name }}（{{ e.get_format_display }}，轮数 {{ e.rounds }}）</a></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>暂无赛段。</p>
+  {% endif %}
+{% endblock %}

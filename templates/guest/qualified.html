@@ -1,0 +1,17 @@
+
+{% extends "guest/base.html" %}
+{% block content %}
+<h2>晋级名单</h2>
+<h3>赛段结算赛</h3>
+<ul>
+  {% for e in settlements %}
+    <li><a href="/event/{{ e.id }}/">{{ e.name }}</a></li>
+  {% endfor %}
+</ul>
+<h3>Season Final</h3>
+<ul>
+  {% for e in finals %}
+    <li><a href="/event/{{ e.id }}/">{{ e.name }}</a></li>
+  {% endfor %}
+</ul>
+{% endblock %}

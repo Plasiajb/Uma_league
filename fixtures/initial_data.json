@@ -1,0 +1,884 @@
+[
+  {
+    "model": "turf.season",
+    "pk": 1,
+    "fields": {
+      "name": "Season 1",
+      "start_date": "2025-09-01",
+      "end_date": "2025-12-31"
+    }
+  },
+  {
+    "model": "turf.stage",
+    "pk": 1,
+    "fields": {
+      "season": 1,
+      "month": "2025-09",
+      "type": "settlement",
+      "track_name": "草地1600m",
+      "ruleset_json": "{}"
+    }
+  },
+  {
+    "model": "turf.stage",
+    "pk": 2,
+    "fields": {
+      "season": 1,
+      "month": "2025-12",
+      "type": "final",
+      "track_name": "泥地1800m",
+      "ruleset_json": "{}"
+    }
+  },
+  {
+    "model": "turf.event",
+    "pk": 1,
+    "fields": {
+      "stage": 1,
+      "name": "赛段结算赛演示",
+      "format": "settlement",
+      "rounds": 5,
+      "group_count": 2
+    }
+  },
+  {
+    "model": "turf.event",
+    "pk": 2,
+    "fields": {
+      "stage": 2,
+      "name": "Season Final 演示",
+      "format": "final",
+      "rounds": 7,
+      "group_count": 2
+    }
+  },
+  {
+    "model": "turf.event",
+    "pk": 3,
+    "fields": {
+      "stage": 1,
+      "name": "前哨战展示",
+      "format": "prelim",
+      "rounds": 5,
+      "group_count": 3
+    }
+  },
+  {
+    "model": "turf.event",
+    "pk": 4,
+    "fields": {
+      "stage": 1,
+      "name": "选拔赛（榜单展示）",
+      "format": "qualifier",
+      "rounds": 1,
+      "group_count": 1
+    }
+  },
+  {
+    "model": "turf.event",
+    "pk": 5,
+    "fields": {
+      "stage": 2,
+      "name": "Final 预选（榜单展示）",
+      "format": "final_pre",
+      "rounds": 1,
+      "group_count": 1
+    }
+  },
+  {
+    "model": "turf.group",
+    "pk": 1,
+    "fields": {
+      "event": 1,
+      "name": "A"
+    }
+  },
+  {
+    "model": "turf.group",
+    "pk": 2,
+    "fields": {
+      "event": 1,
+      "name": "B"
+    }
+  },
+  {
+    "model": "turf.group",
+    "pk": 3,
+    "fields": {
+      "event": 2,
+      "name": "A"
+    }
+  },
+  {
+    "model": "turf.group",
+    "pk": 4,
+    "fields": {
+      "event": 2,
+      "name": "B"
+    }
+  },
+  {
+    "model": "turf.group",
+    "pk": 5,
+    "fields": {
+      "event": 3,
+      "name": "1"
+    }
+  },
+  {
+    "model": "turf.group",
+    "pk": 6,
+    "fields": {
+      "event": 3,
+      "name": "2"
+    }
+  },
+  {
+    "model": "turf.group",
+    "pk": 7,
+    "fields": {
+      "event": 3,
+      "name": "3"
+    }
+  },
+  {
+    "model": "turf.player",
+    "pk": 1,
+    "fields": {
+      "user": null,
+      "name": "Alice",
+      "bio": "Hello, I'm Alice."
+    }
+  },
+  {
+    "model": "turf.player",
+    "pk": 2,
+    "fields": {
+      "user": null,
+      "name": "Bob",
+      "bio": "Hello, I'm Bob."
+    }
+  },
+  {
+    "model": "turf.player",
+    "pk": 3,
+    "fields": {
+      "user": null,
+      "name": "Carol",
+      "bio": "Hello, I'm Carol."
+    }
+  },
+  {
+    "model": "turf.player",
+    "pk": 4,
+    "fields": {
+      "user": null,
+      "name": "Dave",
+      "bio": "Hello, I'm Dave."
+    }
+  },
+  {
+    "model": "turf.player",
+    "pk": 5,
+    "fields": {
+      "user": null,
+      "name": "Eve",
+      "bio": "Hello, I'm Eve."
+    }
+  },
+  {
+    "model": "turf.player",
+    "pk": 6,
+    "fields": {
+      "user": null,
+      "name": "Frank",
+      "bio": "Hello, I'm Frank."
+    }
+  },
+  {
+    "model": "turf.player",
+    "pk": 7,
+    "fields": {
+      "user": null,
+      "name": "Grace",
+      "bio": "Hello, I'm Grace."
+    }
+  },
+  {
+    "model": "turf.player",
+    "pk": 8,
+    "fields": {
+      "user": null,
+      "name": "Heidi",
+      "bio": "Hello, I'm Heidi."
+    }
+  },
+  {
+    "model": "turf.player",
+    "pk": 9,
+    "fields": {
+      "user": null,
+      "name": "Ivan",
+      "bio": "Hello, I'm Ivan."
+    }
+  },
+  {
+    "model": "turf.player",
+    "pk": 10,
+    "fields": {
+      "user": null,
+      "name": "Judy",
+      "bio": "Hello, I'm Judy."
+    }
+  },
+  {
+    "model": "turf.player",
+    "pk": 11,
+    "fields": {
+      "user": null,
+      "name": "Mallory",
+      "bio": "Hello, I'm Mallory."
+    }
+  },
+  {
+    "model": "turf.player",
+    "pk": 12,
+    "fields": {
+      "user": null,
+      "name": "Niaj",
+      "bio": "Hello, I'm Niaj."
+    }
+  },
+  {
+    "model": "turf.enrollment",
+    "pk": 1,
+    "fields": {
+      "event": 1,
+      "player": 1,
+      "status": "active"
+    }
+  },
+  {
+    "model": "turf.enrollment",
+    "pk": 2,
+    "fields": {
+      "event": 1,
+      "player": 2,
+      "status": "active"
+    }
+  },
+  {
+    "model": "turf.enrollment",
+    "pk": 3,
+    "fields": {
+      "event": 1,
+      "player": 3,
+      "status": "active"
+    }
+  },
+  {
+    "model": "turf.enrollment",
+    "pk": 4,
+    "fields": {
+      "event": 1,
+      "player": 4,
+      "status": "active"
+    }
+  },
+  {
+    "model": "turf.enrollment",
+    "pk": 5,
+    "fields": {
+      "event": 1,
+      "player": 5,
+      "status": "active"
+    }
+  },
+  {
+    "model": "turf.enrollment",
+    "pk": 6,
+    "fields": {
+      "event": 1,
+      "player": 6,
+      "status": "active"
+    }
+  },
+  {
+    "model": "turf.enrollment",
+    "pk": 7,
+    "fields": {
+      "event": 1,
+      "player": 7,
+      "status": "active"
+    }
+  },
+  {
+    "model": "turf.enrollment",
+    "pk": 8,
+    "fields": {
+      "event": 1,
+      "player": 8,
+      "status": "active"
+    }
+  },
+  {
+    "model": "turf.enrollment",
+    "pk": 9,
+    "fields": {
+      "event": 1,
+      "player": 9,
+      "status": "active"
+    }
+  },
+  {
+    "model": "turf.enrollment",
+    "pk": 10,
+    "fields": {
+      "event": 1,
+      "player": 10,
+      "status": "active"
+    }
+  },
+  {
+    "model": "turf.enrollment",
+    "pk": 11,
+    "fields": {
+      "event": 1,
+      "player": 11,
+      "status": "active"
+    }
+  },
+  {
+    "model": "turf.enrollment",
+    "pk": 12,
+    "fields": {
+      "event": 1,
+      "player": 12,
+      "status": "active"
+    }
+  },
+  {
+    "model": "turf.groupmembership",
+    "pk": 1,
+    "fields": {
+      "event": 1,
+      "round_no": 1,
+      "group": 1,
+      "player": 1
+    }
+  },
+  {
+    "model": "turf.groupmembership",
+    "pk": 2,
+    "fields": {
+      "event": 1,
+      "round_no": 1,
+      "group": 1,
+      "player": 2
+    }
+  },
+  {
+    "model": "turf.groupmembership",
+    "pk": 3,
+    "fields": {
+      "event": 1,
+      "round_no": 1,
+      "group": 1,
+      "player": 3
+    }
+  },
+  {
+    "model": "turf.groupmembership",
+    "pk": 4,
+    "fields": {
+      "event": 1,
+      "round_no": 1,
+      "group": 1,
+      "player": 4
+    }
+  },
+  {
+    "model": "turf.groupmembership",
+    "pk": 5,
+    "fields": {
+      "event": 1,
+      "round_no": 1,
+      "group": 1,
+      "player": 5
+    }
+  },
+  {
+    "model": "turf.groupmembership",
+    "pk": 6,
+    "fields": {
+      "event": 1,
+      "round_no": 1,
+      "group": 1,
+      "player": 6
+    }
+  },
+  {
+    "model": "turf.groupmembership",
+    "pk": 7,
+    "fields": {
+      "event": 1,
+      "round_no": 1,
+      "group": 2,
+      "player": 7
+    }
+  },
+  {
+    "model": "turf.groupmembership",
+    "pk": 8,
+    "fields": {
+      "event": 1,
+      "round_no": 1,
+      "group": 2,
+      "player": 8
+    }
+  },
+  {
+    "model": "turf.groupmembership",
+    "pk": 9,
+    "fields": {
+      "event": 1,
+      "round_no": 1,
+      "group": 2,
+      "player": 9
+    }
+  },
+  {
+    "model": "turf.groupmembership",
+    "pk": 10,
+    "fields": {
+      "event": 1,
+      "round_no": 1,
+      "group": 2,
+      "player": 10
+    }
+  },
+  {
+    "model": "turf.groupmembership",
+    "pk": 11,
+    "fields": {
+      "event": 1,
+      "round_no": 1,
+      "group": 2,
+      "player": 11
+    }
+  },
+  {
+    "model": "turf.groupmembership",
+    "pk": 12,
+    "fields": {
+      "event": 1,
+      "round_no": 1,
+      "group": 2,
+      "player": 12
+    }
+  },
+  {
+    "model": "turf.heat",
+    "pk": 1,
+    "fields": {
+      "event": 1,
+      "round_no": 1,
+      "group": 1,
+      "room_code": "ROOM-A-R1"
+    }
+  },
+  {
+    "model": "turf.heat",
+    "pk": 2,
+    "fields": {
+      "event": 1,
+      "round_no": 1,
+      "group": 2,
+      "room_code": "ROOM-B-R1"
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 1,
+    "fields": {
+      "heat": 1,
+      "player": 1,
+      "horse_no": 1,
+      "place": 5,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 2,
+    "fields": {
+      "heat": 1,
+      "player": 1,
+      "horse_no": 2,
+      "place": 7,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 3,
+    "fields": {
+      "heat": 1,
+      "player": 2,
+      "horse_no": 1,
+      "place": 1,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 4,
+    "fields": {
+      "heat": 1,
+      "player": 2,
+      "horse_no": 2,
+      "place": 2,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 5,
+    "fields": {
+      "heat": 1,
+      "player": 3,
+      "horse_no": 1,
+      "place": 9,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 6,
+    "fields": {
+      "heat": 1,
+      "player": 3,
+      "horse_no": 2,
+      "place": 10,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 7,
+    "fields": {
+      "heat": 1,
+      "player": 4,
+      "horse_no": 1,
+      "place": 8,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 8,
+    "fields": {
+      "heat": 1,
+      "player": 4,
+      "horse_no": 2,
+      "place": 12,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 9,
+    "fields": {
+      "heat": 1,
+      "player": 5,
+      "horse_no": 1,
+      "place": 6,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 10,
+    "fields": {
+      "heat": 1,
+      "player": 5,
+      "horse_no": 2,
+      "place": 11,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 11,
+    "fields": {
+      "heat": 1,
+      "player": 6,
+      "horse_no": 1,
+      "place": 3,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 12,
+    "fields": {
+      "heat": 1,
+      "player": 6,
+      "horse_no": 2,
+      "place": 4,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 13,
+    "fields": {
+      "heat": 2,
+      "player": 7,
+      "horse_no": 1,
+      "place": 12,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 14,
+    "fields": {
+      "heat": 2,
+      "player": 7,
+      "horse_no": 2,
+      "place": 11,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 15,
+    "fields": {
+      "heat": 2,
+      "player": 8,
+      "horse_no": 1,
+      "place": 4,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 16,
+    "fields": {
+      "heat": 2,
+      "player": 8,
+      "horse_no": 2,
+      "place": 3,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 17,
+    "fields": {
+      "heat": 2,
+      "player": 9,
+      "horse_no": 1,
+      "place": 7,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 18,
+    "fields": {
+      "heat": 2,
+      "player": 9,
+      "horse_no": 2,
+      "place": 8,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 19,
+    "fields": {
+      "heat": 2,
+      "player": 10,
+      "horse_no": 1,
+      "place": 1,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 20,
+    "fields": {
+      "heat": 2,
+      "player": 10,
+      "horse_no": 2,
+      "place": 9,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 21,
+    "fields": {
+      "heat": 2,
+      "player": 11,
+      "horse_no": 1,
+      "place": 6,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 22,
+    "fields": {
+      "heat": 2,
+      "player": 11,
+      "horse_no": 2,
+      "place": 10,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 23,
+    "fields": {
+      "heat": 2,
+      "player": 12,
+      "horse_no": 1,
+      "place": 5,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.result",
+    "pk": 24,
+    "fields": {
+      "heat": 2,
+      "player": 12,
+      "horse_no": 2,
+      "place": 2,
+      "is_npc": false
+    }
+  },
+  {
+    "model": "turf.publishedrank",
+    "pk": 1,
+    "fields": {
+      "event": 4,
+      "player": 1,
+      "rank": 1,
+      "note": "晋级结算赛演示"
+    }
+  },
+  {
+    "model": "turf.publishedrank",
+    "pk": 2,
+    "fields": {
+      "event": 4,
+      "player": 2,
+      "rank": 2,
+      "note": "晋级结算赛演示"
+    }
+  },
+  {
+    "model": "turf.publishedrank",
+    "pk": 3,
+    "fields": {
+      "event": 4,
+      "player": 3,
+      "rank": 3,
+      "note": "晋级结算赛演示"
+    }
+  },
+  {
+    "model": "turf.publishedrank",
+    "pk": 4,
+    "fields": {
+      "event": 4,
+      "player": 4,
+      "rank": 4,
+      "note": "晋级结算赛演示"
+    }
+  },
+  {
+    "model": "turf.publishedrank",
+    "pk": 5,
+    "fields": {
+      "event": 4,
+      "player": 5,
+      "rank": 5,
+      "note": "晋级结算赛演示"
+    }
+  },
+  {
+    "model": "turf.publishedrank",
+    "pk": 6,
+    "fields": {
+      "event": 4,
+      "player": 6,
+      "rank": 6,
+      "note": "晋级结算赛演示"
+    }
+  },
+  {
+    "model": "turf.publishedrank",
+    "pk": 7,
+    "fields": {
+      "event": 5,
+      "player": 1,
+      "rank": 1,
+      "note": "晋级 Final 演示"
+    }
+  },
+  {
+    "model": "turf.publishedrank",
+    "pk": 8,
+    "fields": {
+      "event": 5,
+      "player": 2,
+      "rank": 2,
+      "note": "晋级 Final 演示"
+    }
+  },
+  {
+    "model": "turf.publishedrank",
+    "pk": 9,
+    "fields": {
+      "event": 5,
+      "player": 3,
+      "rank": 3,
+      "note": "晋级 Final 演示"
+    }
+  },
+  {
+    "model": "turf.publishedrank",
+    "pk": 10,
+    "fields": {
+      "event": 5,
+      "player": 4,
+      "rank": 4,
+      "note": "晋级 Final 演示"
+    }
+  },
+  {
+    "model": "turf.publishedrank",
+    "pk": 11,
+    "fields": {
+      "event": 5,
+      "player": 5,
+      "rank": 5,
+      "note": "晋级 Final 演示"
+    }
+  },
+  {
+    "model": "turf.publishedrank",
+    "pk": 12,
+    "fields": {
+      "event": 5,
+      "player": 6,
+      "rank": 6,
+      "note": "晋级 Final 演示"
+    }
+  }
+]

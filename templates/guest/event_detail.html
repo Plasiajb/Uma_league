@@ -1,0 +1,64 @@
+
+{% extends "guest/base.html" %}
+{% block content %}
+<h2>{{ event.name }}（{{ event.get_format_display }}）</h2>
+<p>轮数：{{ event.rounds }} | 分组数：{{ event.group_count }}</p>
+
+{% if request.user.is_authenticated %}
+  <p><a href="/event/{{ event.id }}/enroll/">报名参加本赛事</a></p>
+{% else %}
+  <p><a href="/login/">登录</a> 后可报名。</p>
+{% endif %}
+
+{% if published %}
+<h3>公布名次（仅展示，不计入系统）</h3>
+<table>
+  <thead><tr><th>名次</th><th>选手</th><th>备注</th></tr></thead>
+  <tbody>
+    {% for p in published %}
+      <tr><td>{{ p.rank }}</td><td>{{ p.player.name }}</td><td>{{ p.note }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+<h3>房间号</h3>
+<table>
+  <thead><tr><th>轮次</th><th>组别</th><th>房间号</th></tr></thead>
+  <tbody>
+  {% for h in heats %}
+    <tr><td>{{ h.round_no }}</td><td>{{ h.group.name }}</td><td>{{ h.room_code }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h3>分组名单</h3>
+<table>
+  <thead><tr><th>轮次</th><th>组别</th><th>选手</th></tr></thead>
+  <tbody>
+    {% for gm in group_members %}
+      <tr><td>{{ gm.round_no }}</td><td>{{ gm.group.name }}</td><td>{{ gm.player.name }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h3>积分榜</h3>
+<table>
+  <thead><tr><th>名次</th><th>选手</th><th>累计积分（越小越好）</th></tr></thead>
+  <tbody>
+    {% for s in standings %}
+      <tr><td>{{ s.rank }}</td><td>{{ s.player.name }}</td><td>{{ s.total_score }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h3>每轮结果</h3>
+<table>
+  <thead><tr><th>轮次</th><th>组别</th><th>选手</th><th>马#</th><th>名次</th></tr></thead>
+  <tbody>
+  {% for r in results %}
+    <tr><td>{{ r.heat.round_no }}</td><td>{{ r.heat.group.name }}</td><td>{{ r.player.name }}</td><td>{{ r.horse_no }}</td><td>{{ r.place }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

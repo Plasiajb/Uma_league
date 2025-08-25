@@ -1,0 +1,19 @@
+
+{% extends "guest/base.html" %}
+{% block content %}
+<h2>奖金明细</h2>
+<table>
+  <thead><tr><th>赛事</th><th>选手</th><th>基础发放</th><th>Final加成</th><th>总计</th></tr></thead>
+  <tbody>
+  {% for p in payouts %}
+    <tr>
+      <td>{{ p.event.name }}</td>
+      <td>{{ p.player.name }}</td>
+      <td>{{ p.base_amount|floatformat:2 }}</td>
+      <td>{{ p.extra_bonus|floatformat:2 }}</td>
+      <td><strong>{{ p.total_amount|floatformat:2 }}</strong></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

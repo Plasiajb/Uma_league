@@ -1,0 +1,35 @@
+
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Uma League</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <link rel="stylesheet" href="/static/site.css">
+  </head>
+  <body class="bg">
+    <header class="container">
+      <nav>
+        <ul>
+          <li><strong>Uma League</strong></li>
+        </ul>
+        <ul>
+          <li><a href="/">当前赛段</a></li>
+          <li><a href="/players/">选手战绩</a></li>
+          <li><a href="/qualified/">晋级名单</a></li>
+          <li><a href="/payouts/">奖金</a></li>
+          <li><a href="/login/">登录</a></li>
+          <li><a href="/signup/">注册</a></li>
+          <li><a href="/me/">我的</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main class="container card-bg">
+      {% for message in messages %}
+        <article class="notice">{{ message }}</article>
+      {% endfor %}
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>

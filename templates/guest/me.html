@@ -1,0 +1,15 @@
+
+{% extends "guest/base.html" %}
+{% block content %}
+<h2>我的资料</h2>
+{% if player %}
+<p>选手名：<strong>{{ player.name }}</strong></p>
+<form method="post">{% csrf_token %}
+  <label>自我介绍</label>
+  <textarea name="bio" rows="6">{{ player.bio }}</textarea>
+  <button type="submit">保存</button>
+</form>
+{% else %}
+<p>你还没有绑定选手名，请先 <a href="/signup/">注册</a>。</p>
+{% endif %}
+{% endblock %}

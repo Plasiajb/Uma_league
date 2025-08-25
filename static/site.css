@@ -1,0 +1,7 @@
+
+.bg { background: url('/static/bg.jpg') no-repeat center center fixed; background-size: cover; }
+.card-bg { background: rgba(255,255,255,0.92); padding: 1rem; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+.notice { background:#ffe9a8; padding: .5rem 1rem; border-radius: 6px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.promo { background: #f5f7ff; padding: 1rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+@media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
