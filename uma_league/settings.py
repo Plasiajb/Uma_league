@@ -49,11 +49,11 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 _raw = os.getenv("CSRF_TRUSTED_ORIGINS", "")
 CSRF_TRUSTED_ORIGINS = [x.strip() for x in _raw.split(",") if x.strip()]
 
-# 静态文件
+# WhiteNoise 已经在 MIDDLEWARE 里（在 SecurityMiddleware 之后）
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_DIRS = [BASE_DIR / "static"]  # 目录可以为空，别删
 
-# 让 WhiteNoise 提供压缩+带指纹的静态资源（生产环境推荐）
+# 先用最保险的存储，避免 manifest 缺失直接 500
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
