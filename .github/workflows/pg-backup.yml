@@ -1,19 +1,19 @@
 name: pg-backup
 
 on:
-  # 手动触发
-  workflow_dispatch: {}
-  # 每天 03:00 UTC 备份（自行改 cron；UTC=中国-8h=瑞典+1h 冬令时）
+  workflow_dispatch: {}   # 手动触发
   schedule:
-    - cron: "0 3 * * *"
+    - cron: "0 3 * * *"   # 每天 03:00 UTC
 
 jobs:
   backup:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write      # 必须有写权限才能发 Release
 
     steps:
       - name: Install PostgreSQL client
-        run: sudo apt-get update && sudo apt-get -y install postgresql-client
+        run: sudo apt-get update && sudo apt-get -y install postgresql-client openssl
 
       - name: Dump database
         env:
@@ -23,9 +23,8 @@ jobs:
           TS=$(date -u +'%Y%m%d-%H%M%SZ')
           echo "TS=$TS" >> $GITHUB_ENV
           FILE="backup-$TS.dump"
-          # 自定义格式(-Fc)，后续 pg_restore 更灵活
-          pg_dump --format=custom --no-owner --no-privileges --dbname="$PG_URL" -f "$FILE"
           echo "FILE=$FILE" >> $GITHUB_ENV
+          pg_dump --format=custom --no-owner --no-privileges --dbname="$PG_URL" -f "$FILE"
 
       - name: Encrypt backup (AES-256)
         if: ${{ secrets.BACKUP_PASSPHRASE != '' }}
@@ -45,10 +44,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 可选：再作为 artifact 备一份（90 天过期）
       - name: Upload artifact (optional)
         uses: actions/upload-artifact@v4
         with:
           name: db-backup-${{ env.TS }}
           path: ${{ env.FILE }}
           retention-days: 90
+
