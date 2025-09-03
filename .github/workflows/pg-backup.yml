@@ -9,19 +9,39 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # 发 Release 必须
+      contents: write   # 需要发 Release
 
     steps:
-      - name: Install PostgreSQL client & openssl
-        run: sudo apt-get update && sudo apt-get -y install postgresql-client openssl
+      - name: Install PostgreSQL 17 client & openssl
+        run: |
+          set -e
+          sudo apt-get update
+          sudo apt-get -y install wget ca-certificates gnupg lsb-release
+          echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get -y install postgresql-client-17 openssl
+          pg_dump --version
+
+      - name: Prepare PG URL (force sslmode=require if missing)
+        env:
+          PG_URL_RAW: ${{ secrets.PG_URL }}
+        run: |
+          set -e
+          if [[ -z "$PG_URL_RAW" ]]; then
+            echo "PG_URL secret is missing"; exit 1
+          fi
+          URL="$PG_URL_RAW"
+          if [[ "$URL" != *"sslmode="* ]]; then
+            if [[ "$URL" == *"?"* ]]; then URL="${URL}&sslmode=require"; else URL="${URL}?sslmode=require"; fi
+          fi
+          echo "PG_URL=$URL" >> $GITHUB_ENV
 
       - name: Dump database
-        env:
-          PG_URL: ${{ secrets.PG_URL }}
         run: |
           set -e
           TS=$(date -u +'%Y%m%d-%H%M%SZ')
-          echo "TS=$TS" >> $GITHUB_ENV
+          echo "TS=$TS"   >> $GITHUB_ENV
           FILE="backup-$TS.dump"
           echo "FILE=$FILE" >> $GITHUB_ENV
           pg_dump --format=custom --no-owner --no-privileges --dbname="$PG_URL" -f "$FILE"
@@ -44,12 +64,4 @@ jobs:
           tag_name: db-backup-${{ env.TS }}
           name: DB backup ${{ env.TS }}
           files: ${{ env.FILE }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload artifact (optional)
-        uses: actions/upload-artifact@v4
-        with:
-          name: db-backup-${{ env.TS }}
-          path: ${{ env.FILE }}
-          retention-days: 90
