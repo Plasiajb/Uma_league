@@ -84,3 +84,79 @@ def pair_next_round(event: Event):
     for g in groups:
         Heat.objects.get_or_create(event=event, round_no=next_no, group=g)
     return len(st)
+
+# === 追加到文件底部（或与其它分组函数放一起） ===
+import random
+from django.db import transaction
+from .models import Enrollment, Group, Heat, GroupMembership
+
+# 5轮×3组×12人的固定分组表（编号 1..36）
+VANGUARD_ENTROPY_SCHEDULE = {
+    1: {
+        "A": [1,2,3,4,13,14,15,16,25,26,27,28],
+        "B": [5,6,7,8,17,18,19,20,29,30,31,32],
+        "C": [9,10,11,12,21,22,23,24,33,34,35,36],
+    },
+    2: {
+        "A": [2,3,4,5,18,19,20,21,25,34,35,36],
+        "B": [6,7,8,9,13,22,23,24,26,27,28,29],
+        "C": [1,10,11,12,14,15,16,17,30,31,32,33],
+    },
+    3: {
+        "A": [3,4,5,6,13,14,23,24,31,32,33,34],
+        "B": [7,8,9,10,15,16,17,18,25,26,35,36],
+        "C": [1,2,11,12,19,20,21,22,27,28,29,30],
+    },
+    4: {
+        "A": [4,5,6,7,16,17,18,19,25,26,27,36],
+        "B": [8,9,10,11,20,21,22,23,28,29,30,31],
+        "C": [1,2,3,12,13,14,15,24,32,33,34,35],
+    },
+    5: {
+        "A": [5,6,7,8,21,22,23,24,33,34,35,36],
+        "B": [9,10,11,12,13,14,15,16,25,26,27,28],
+        "C": [1,2,3,4,17,18,19,20,29,30,31,32],
+    },
+}
+
+def seed_vanguard_entropy(event, *, rng=None):
+    """
+    前哨战：报名36人 → 随机发1..36序号 → 按固定熵最大表生成5轮 A/B/C 分组。
+    生成/覆盖：Heat + GroupMembership（round=1..5）。
+    要求：恰好36名报名；不自动补NPC。
+    """
+    if rng is None:
+        rng = random.Random()
+
+    enrolls = list(Enrollment.objects.filter(event=event).select_related("player"))
+    players = [e.player for e in enrolls]
+    players = list(dict.fromkeys(players))  # 去重保险
+    n = len(players)
+    if n != 36:
+        raise ValueError(f"前哨战需要恰好36名报名，当前 {n}。")
+
+    order = list(range(36))
+    rng.shuffle(order)
+    p2serial = {players[i]: order[i] + 1 for i in range(36)}
+
+    groups = {}
+    for name in ("A", "B", "C"):
+        groups[name], _ = Group.objects.get_or_create(event=event, name=name)
+
+    with transaction.atomic():
+        Heat.objects.filter(event=event, round__in=[1,2,3,4,5]).delete()
+        GroupMembership.objects.filter(event=event, round__in=[1,2,3,4,5]).delete()
+
+        for r in range(1, 6):
+            plan = VANGUARD_ENTROPY_SCHEDULE[r]
+            for name in ("A", "B", "C"):
+                g = groups[name]
+                heat, _ = Heat.objects.get_or_create(event=event, round=r, group=g)
+                serials = set(plan[name])
+                chosen = [p for p, s in p2serial.items() if s in serials]
+                if len(chosen) != 12:
+                    raise RuntimeError(f"第{r}轮{name}组应为12人，当前{len(chosen)}。")
+                for p in chosen:
+                    GroupMembership.objects.create(event=event, round=r, group=g, player=p)
+
+    return p2serial  # 用于页面展示“选手→序号”

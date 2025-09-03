@@ -1,4 +1,3 @@
-
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -35,7 +34,13 @@ class Stage(models.Model):
 class Event(models.Model):
     stage = models.ForeignKey(Stage, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
-    format = models.CharField(max_length=20, choices=[("prelim","前哨战"),("settlement","结算赛"),("final","Final"),("qualifier","选拔赛"),("final_pre","Final预选")])
+    format = models.CharField(max_length=20, choices=[
+        ("prelim","前哨战"),
+        ("settlement","结算赛"),
+        ("final","Final"),
+        ("qualifier","选拔赛"),
+        ("final_pre","Final预选")
+    ])
     rounds = models.IntegerField(default=5)
     group_count = models.IntegerField(default=2)
     def __str__(self):
@@ -112,7 +117,7 @@ class Announcement(models.Model):
     body = models.TextField(help_text="支持换行。可写少量HTML（如 <br>、<a>）。")
     is_active = models.BooleanField(default=True)
     show_on_login = models.BooleanField(default=True)   # 是否在登录页显示
-    show_on_home = models.BooleanField(default=False)   # 是否在首页显示（可选）
+    show_on_home = models.BooleanField(default=False)  # 是否在首页显示（可选）
     start_at = models.DateTimeField(null=True, blank=True)
     end_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -123,3 +128,18 @@ class Announcement(models.Model):
     def __str__(self):
         return f"{self.title} ({'ON' if self.is_active else 'OFF'})"
 
+# ---- 自助战绩填报（待审表） ----
+class SelfReport(models.Model):
+    event = models.ForeignKey("Event", on_delete=models.CASCADE)
+    player = models.ForeignKey("Player", on_delete=models.CASCADE)
+    round_no = models.IntegerField()                # 第几轮（1..5/7）
+    horse_index = models.IntegerField(default=1)    # 第几匹马：前哨战=1；结算/Final=1或2
+    place = models.IntegerField()                   # 填报名次
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    verified = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ("event", "player", "round_no", "horse_index")
+
+    def __str__(self):
+        return f"{self.event} / {self.player} / R{self.round_no} H{self.horse_index} = {self.place}"

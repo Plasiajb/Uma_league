@@ -1,8 +1,18 @@
-
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db import models
-from .models import Player, Season, Stage, Event, Group, Enrollment, Heat, Result, Standing, Payout, GroupMembership, PublishedRank
+from django.db.models import Q
+from itertools import groupby
+from django.db import transaction
+
+from .models import (
+    Player, Season, Stage, Event, Group, Enrollment, Heat, Result,
+    Standing, Payout, GroupMembership, PublishedRank, Announcement, SelfReport
+)
 from .utils import recompute_standings, compute_payouts_for_event, seed_round1, pair_next_round
+
+# =========================
+# 基础模型注册
+# =========================
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
@@ -91,8 +101,6 @@ class PublishedRankAdmin(admin.ModelAdmin):
     list_filter = ["event"]
     ordering = ["event","rank"]
 
-from .models import Announcement
-
 @admin.register(Announcement)
 class AnnouncementAdmin(admin.ModelAdmin):
     list_display = ["title", "is_active", "show_on_login", "show_on_home", "start_at", "end_at", "updated_at"]
@@ -107,4 +115,121 @@ class AnnouncementAdmin(admin.ModelAdmin):
     @admin.action(description="停用所选公告")
     def deactivate(self, request, queryset):
         queryset.update(is_active=False)
+
+# =========================
+#   前哨战：熵最大分组
+# =========================
+
+# 固定分组表（5轮 × 3组 × 12人）
+VANGUARD_ENTROPY_SCHEDULE = {
+    1: {"A": [1,2,3,4,13,14,15,16,25,26,27,28],
+        "B": [5,6,7,8,17,18,19,20,29,30,31,32],
+        "C": [9,10,11,12,21,22,23,24,33,34,35,36]},
+    2: {"A": [2,3,4,5,18,19,20,21,25,34,35,36],
+        "B": [6,7,8,9,13,22,23,24,26,27,28,29],
+        "C": [1,10,11,12,14,15,16,17,30,31,32,33]},
+    3: {"A": [3,4,5,6,13,14,23,24,31,32,33,34],
+        "B": [7,8,9,10,15,16,17,18,25,26,35,36],
+        "C": [1,2,11,12,19,20,21,22,27,28,29,30]},
+    4: {"A": [4,5,6,7,16,17,18,19,25,26,27,36],
+        "B": [8,9,10,11,20,21,22,23,28,29,30,31],
+        "C": [1,2,3,12,13,14,15,24,32,33,34,35]},
+    5: {"A": [5,6,7,8,21,22,23,24,33,34,35,36],
+        "B": [9,10,11,12,13,14,15,16,25,26,27,28],
+        "C": [1,2,3,4,17,18,19,20,29,30,31,32]},
+}
+
+@admin.action(description="前哨战分组（熵最大5轮）")
+def action_seed_vanguard_entropy(modeladmin, request, queryset):
+    # 不依赖 utils 内旧函数，直接这里实现（用 round_no 字段）
+    import random
+    ok = fail = 0
+
+    for event in queryset:
+        try:
+            # 报名选手（去重）
+            enrolls = list(Enrollment.objects.filter(event=event).select_related("player"))
+            players = [e.player for e in enrolls]
+            players = list(dict.fromkeys(players))
+            if len(players) != 36:
+                raise ValueError(f"前哨战需要恰好36名报名，当前 {len(players)}。")
+
+            order = list(range(36))
+            random.shuffle(order)
+            p2serial = {players[i]: order[i] + 1 for i in range(36)}
+
+            # 组 A/B/C
+            groups = {}
+            for name in ("A","B","C"):
+                groups[name], _ = Group.objects.get_or_create(event=event, name=name)
+
+            with transaction.atomic():
+                Heat.objects.filter(event=event, round_no__in=[1,2,3,4,5]).delete()
+                GroupMembership.objects.filter(event=event, round_no__in=[1,2,3,4,5]).delete()
+
+                for r in range(1, 6):
+                    plan = VANGUARD_ENTROPY_SCHEDULE[r]
+                    for name in ("A","B","C"):
+                        g = groups[name]
+                        heat, _ = Heat.objects.get_or_create(event=event, round_no=r, group=g)
+                        serials = set(plan[name])
+                        chosen = [p for p, s in p2serial.items() if s in serials]
+                        if len(chosen) != 12:
+                            raise RuntimeError(f"第{r}轮{name}组应为12人，当前{len(chosen)}。")
+                        for p in chosen:
+                            GroupMembership.objects.create(event=event, round_no=r, group=g, player=p)
+
+            ok += 1
+            sample = ", ".join([f"{p.name}:{sn}" for p, sn in list(p2serial.items())[:5]])
+            messages.success(request, f"[{event}] 分组生成完成。示例映射 {sample} …")
+
+        except Exception as e:
+            fail += 1
+            messages.error(request, f"[{event}] 失败：{e}")
+
+    messages.info(request, f"完成：成功 {ok}，失败 {fail}")
+
+# 将动作追加到已注册的 EventAdmin
+EventAdmin.actions = list(getattr(EventAdmin, "actions", [])) + [action_seed_vanguard_entropy]
+
+# =========================
+#   自助填报审核 → 正式成绩
+# =========================
+
+@admin.register(SelfReport)
+class SelfReportAdmin(admin.ModelAdmin):
+    list_display = ("event", "player", "round_no", "horse_index", "place", "verified", "submitted_at")
+    list_filter = ("event", "verified")
+    search_fields = ("player__name", )
+
+    @admin.action(description="审核通过并写入正式成绩")
+    def approve_reports(self, request, queryset):
+        qs = queryset.filter(verified=False).order_by("event_id", "player_id", "round_no", "horse_index")
+        count = 0
+
+        def key(r): return (r.event_id, r.player_id, r.round_no)
+        for (event_id, player_id, rnd), grp in groupby(qs, key=key):
+            grp = list(grp)
+            total_place = sum(int(r.place) for r in grp)
+
+            try:
+                gm = GroupMembership.objects.get(event_id=event_id, player_id=player_id, round_no=rnd)
+                heat = Heat.objects.get(event_id=event_id, round_no=rnd, group=gm.group)
+            except GroupMembership.DoesNotExist:
+                messages.error(request, f"[event={event_id}, player={player_id}, round={rnd}] 无分组记录。")
+                continue
+            except Heat.DoesNotExist:
+                messages.error(request, f"[event={event_id}, round={rnd}] 无 Heat 记录。")
+                continue
+
+            Result.objects.update_or_create(
+                event_id=event_id, player_id=player_id, heat=heat,
+                defaults={"place": total_place}
+            )
+            SelfReport.objects.filter(event_id=event_id, player_id=player_id, round_no=rnd).update(verified=True)
+            count += 1
+
+        messages.success(request, f"已审核并写入 {count} 轮成绩。")
+
+    actions = ["approve_reports"]
 

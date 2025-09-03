@@ -12,4 +12,5 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("me/", views.me, name="me"),
     path("event/<int:event_id>/enroll/", views.enroll_event, name="enroll_event"),
+    path("events/<int:event_id>/report/", views.report_results, name="report_results"),
 ]
