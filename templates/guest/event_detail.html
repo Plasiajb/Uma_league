@@ -5,9 +5,14 @@
 <p>轮数：{{ event.rounds }} | 分组数：{{ event.group_count }}</p>
 
 {% if request.user.is_authenticated %}
-  <p><a href="/event/{{ event.id }}/enroll/">报名参加本赛事</a></p>
+  <p>
+    <a href="/event/{{ event.id }}/enroll/">报名参加本赛事</a>
+    {% if can_report %}
+      &nbsp;|&nbsp; <a href="/events/{{ event.id }}/report/">战绩填报</a>
+    {% endif %}
+  </p>
 {% else %}
-  <p><a href="/login/">登录</a> 后可报名。</p>
+  <p><a href="/login/">登录</a> 后可报名与填报。</p>
 {% endif %}
 
 {% if published %}

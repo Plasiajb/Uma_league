@@ -19,6 +19,7 @@ def home(request):
     ctx = {"stage": stage, "events": events}
     return render(request, "guest/home.html", ctx)
 
+# views.py → event_detail 内
 def event_detail(request, event_id: int):
     event = get_object_or_404(Event, id=event_id)
     standings = Standing.objects.filter(event=event).order_by('rank')
@@ -26,7 +27,18 @@ def event_detail(request, event_id: int):
     results = Result.objects.filter(heat__in=heats, is_npc=False).select_related('player','heat','heat__group')
     gms = GroupMembership.objects.filter(event=event).order_by('round_no','group__name','player__name')
     published = PublishedRank.objects.filter(event=event).order_by('rank')
-    ctx = {"event": event,"standings": standings,"heats": heats,"results": results,"group_members": gms,"published": published}
+
+    # 新增：是否显示“战绩填报”按钮（登录且本赛事有分组）
+    can_report = False
+    if request.user.is_authenticated:
+        player = getattr(request.user, "player", None) or Player.objects.filter(user=request.user).first()
+        if player and GroupMembership.objects.filter(event=event, player=player).exists():
+            can_report = True
+
+    ctx = {
+        "event": event, "standings": standings, "heats": heats, "results": results,
+        "group_members": gms, "published": published, "can_report": can_report,
+    }
     return render(request, "guest/event_detail.html", ctx)
 
 def players(request):
