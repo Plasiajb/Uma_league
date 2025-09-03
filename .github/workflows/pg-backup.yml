@@ -1,18 +1,18 @@
 name: pg-backup
 
 on:
-  workflow_dispatch: {}   # 手动触发
+  workflow_dispatch: {}
   schedule:
-    - cron: "0 3 * * *"   # 每天 03:00 UTC
+    - cron: "0 3 * * *"
 
 jobs:
   backup:
     runs-on: ubuntu-latest
     permissions:
-      contents: write      # 必须有写权限才能发 Release
+      contents: write   # 发 Release 必须
 
     steps:
-      - name: Install PostgreSQL client
+      - name: Install PostgreSQL client & openssl
         run: sudo apt-get update && sudo apt-get -y install postgresql-client openssl
 
       - name: Dump database
@@ -26,11 +26,14 @@ jobs:
           echo "FILE=$FILE" >> $GITHUB_ENV
           pg_dump --format=custom --no-owner --no-privileges --dbname="$PG_URL" -f "$FILE"
 
-      - name: Encrypt backup (AES-256)
-        if: ${{ secrets.BACKUP_PASSPHRASE != '' }}
+      - name: Encrypt backup (AES-256)  # 直接加密，没口令就报错
         env:
           PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
+          set -e
+          if [ -z "${PASSPHRASE}" ]; then
+            echo "ERROR: BACKUP_PASSPHRASE secret is missing."; exit 1
+          fi
           openssl enc -aes-256-cbc -pbkdf2 -salt -in "$FILE" -out "$FILE.enc" -pass env:PASSPHRASE
           rm "$FILE"
           echo "FILE=$FILE.enc" >> $GITHUB_ENV
@@ -50,4 +53,3 @@ jobs:
           name: db-backup-${{ env.TS }}
           path: ${{ env.FILE }}
           retention-days: 90
-
