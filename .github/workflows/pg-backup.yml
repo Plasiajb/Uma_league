@@ -9,7 +9,7 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # 需要发 Release
+      contents: write
 
     steps:
       - name: Install PostgreSQL 17 client & openssl
@@ -21,7 +21,9 @@ jobs:
           wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
           sudo apt-get update
           sudo apt-get -y install postgresql-client-17 openssl
-          pg_dump --version
+          # 把 PG17 的 bin 放到 PATH 最前
+          echo "/usr/lib/postgresql/17/bin" >> $GITHUB_PATH
+          /usr/lib/postgresql/17/bin/pg_dump --version
 
       - name: Prepare PG URL (force sslmode=require if missing)
         env:
@@ -37,16 +39,18 @@ jobs:
           fi
           echo "PG_URL=$URL" >> $GITHUB_ENV
 
-      - name: Dump database
+      - name: Dump database (use pg_dump 17 explicitly)
         run: |
           set -e
+          which pg_dump
+          pg_dump --version   # 应该显示 17.x
           TS=$(date -u +'%Y%m%d-%H%M%SZ')
           echo "TS=$TS"   >> $GITHUB_ENV
           FILE="backup-$TS.dump"
           echo "FILE=$FILE" >> $GITHUB_ENV
           pg_dump --format=custom --no-owner --no-privileges --dbname="$PG_URL" -f "$FILE"
 
-      - name: Encrypt backup (AES-256)  # 直接加密，没口令就报错
+      - name: Encrypt backup (AES-256)
         env:
           PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
@@ -64,4 +68,13 @@ jobs:
           tag_name: db-backup-${{ env.TS }}
           name: DB backup ${{ env.TS }}
           files: ${{ env.FILE }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifact (optional)
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ env.TS }}
+          path: ${{ env.FILE }}
+          retention-days: 90
 
