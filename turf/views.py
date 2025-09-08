@@ -130,12 +130,19 @@ def _per_round_horses(event: Event) -> int:
         return 2
     return 1
 
+# 在文件顶部已 import 的不动
+# 只替换 report_results 这个视图体内 “existing” 和渲染部分
+
 @login_required
 def report_results(request, event_id: int):
     event = get_object_or_404(Event, id=event_id)
-    player = get_object_or_404(Player, user=request.user)
 
-    # 该选手在本赛事的分组列表（用于生成表单）
+    # 允许没有绑定 Player 的账号能提示
+    player = Player.objects.filter(user=request.user).first()
+    if not player:
+        messages.error(request, "当前账号还没有选手名，请先在『我的』页面创建。")
+        return redirect("me")
+
     memberships = list(
         GroupMembership.objects.filter(event=event, player=player).order_by("round_no")
     )
@@ -143,13 +150,12 @@ def report_results(request, event_id: int):
         messages.error(request, "你未参与本赛事或尚未分组。")
         return redirect("event_detail", event_id=event.id)
 
-    horses = _per_round_horses(event)
+    horses = 2 if event.format in ("settlement", "final") else 1
 
-    # 未审核的草稿值
-    existing = {
-        (sr.round_no, sr.horse_index): sr.place
-        for sr in SelfReport.objects.filter(event=event, player=player, verified=False)
-    }
+    # 关键：做成 "r{round}_h{h}" -> place 的扁平字典，模板直接用，不需要过滤器
+    prefill = {}
+    for sr in SelfReport.objects.filter(event=event, player=player, verified=False):
+        prefill[f"r{sr.round_no}_h{sr.horse_index}"] = sr.place
 
     if request.method == "POST":
         updates = 0
@@ -159,7 +165,11 @@ def report_results(request, event_id: int):
                 val = request.POST.get(key, "").strip()
                 if not val:
                     continue
-                place = int(val)
+                try:
+                    place = int(val)
+                except ValueError:
+                    messages.error(request, f"第{m.round_no}轮 第{h}匹：请输入1-12的整数。")
+                    return redirect("report_results", event_id=event.id)
                 if not (1 <= place <= 12):
                     messages.error(request, f"第{m.round_no}轮 第{h}匹：名次必须在1-12之间。")
                     return redirect("report_results", event_id=event.id)
@@ -168,17 +178,12 @@ def report_results(request, event_id: int):
                     defaults={"place": place, "verified": False}
                 )
                 updates += 1
-
-        if updates:
-            messages.success(request, f"已提交 {updates} 条名次，等待裁判审核。")
-        else:
-            messages.info(request, "没有任何更新。")
+        messages.success(request, f"已提交 {updates} 条名次，等待裁判审核。") if updates else messages.info(request, "没有任何更新。")
         return redirect("event_detail", event_id=event.id)
 
     return render(request, "turf/report_results.html", {
         "event": event,
         "memberships": memberships,
         "horses": horses,
-        "existing": existing,
+        "prefill": prefill,   # <— 传这个
     })
-

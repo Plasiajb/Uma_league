@@ -15,7 +15,7 @@
 </head>
 <body>
   <h2>{{ event.name }} 战绩填报</h2>
-  <p>说明：{% if horses == 1 %}本赛事每轮填写 <b>1</b> 个名次（前哨战）。{% else %}本赛事每轮填写 <b>2</b> 个名次（结算战/Final）。{% endif %}</p>
+  <p>说明：{% if horses == 1 %}每轮填写 <b>1</b> 个名次（前哨战）。{% else %}每轮填写 <b>2</b> 个名次（结算/Final）。{% endif %}</p>
 
   <form method="post">
     {% csrf_token %}
@@ -23,29 +23,26 @@
       <tr>
         <th>轮次</th>
         <th>所属组</th>
-        {% for h in 1|to_list:horses %}{% endfor %}
-        {% if horses == 1 %}
-          <th>马1名次</th>
-        {% else %}
-          <th>马1名次</th>
-          <th>马2名次</th>
-        {% endif %}
+        <th>马1名次</th>
+        {% if horses == 2 %}<th>马2名次</th>{% endif %}
       </tr>
       {% for m in memberships %}
+        {% with key1="r"|add:m.round_no|add:"_h1" key2="r"|add:m.round_no|add:"_h2" %}
         <tr>
-          <td>第 {{ m.round }} 轮</td>
+          <td>第 {{ m.round_no }} 轮</td>
           <td>{{ m.group.name }}</td>
           <td>
-            <input type="number" name="r{{ m.round }}_h1" min="1" max="12"
-                   value="{{ existing|get_item:(m.round,1) }}">
+            <input type="number" name="r{{ m.round_no }}_h1" min="1" max="12"
+                   value="{{ prefill.key1 }}">
           </td>
           {% if horses == 2 %}
           <td>
-            <input type="number" name="r{{ m.round }}_h2" min="1" max="12"
-                   value="{{ existing|get_item:(m.round,2) }}">
+            <input type="number" name="r{{ m.round_no }}_h2" min="1" max="12"
+                   value="{{ prefill.key2 }}">
           </td>
           {% endif %}
         </tr>
+        {% endwith %}
       {% endfor %}
     </table>
     <div class="actions">
