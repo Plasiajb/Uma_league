@@ -1,13 +1,30 @@
-
 {% extends "guest/base.html" %}
 {% block content %}
-<h2>选手赛季战绩一览</h2>
+<h2>选手列表</h2>
+
+{% if rows %}
 <table>
-  <thead><tr><th>选手</th><th>参与赛事数</th><th>累计奖金（¥）</th></tr></thead>
+  <thead>
+    <tr><th>选手</th><th>总奖金</th><th>参赛赛事</th><th>荣誉</th></tr>
+  </thead>
   <tbody>
-  {% for r in rows %}
-    <tr><td>{{ r.player }}</td><td>{{ r.events }}</td><td>{{ r.total|floatformat:2 }}</td></tr>
-  {% endfor %}
+    {% for r in rows %}
+    <tr>
+      <td><a href="{% url 'player_profile' r.id %}">{{ r.name }}</a></td>
+      <td>{{ r.total|floatformat:2 }}</td>
+      <td>{{ r.events }}</td>
+      <td style="text-align:left">
+        {% if r.honors.honor_umaleague_season_champ %}<span class="badge">赛季冠军</span>{% endif %}
+        {% if r.honors.honor_umaleague_stage_champ  %}<span class="badge">赛段冠军</span>{% endif %}
+        {% if r.honors.honor_loh96_hero             %}<span class="badge">LOH96杰</span>{% endif %}
+        {% if r.honors.honor_aupl_champion          %}<span class="badge">AUPL冠军</span>{% endif %}
+        {% if r.honors.honor_nxns_champion          %}<span class="badge">NXNS冠军</span>{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
   </tbody>
 </table>
+{% else %}
+<p>（暂无选手）</p>
+{% endif %}
 {% endblock %}

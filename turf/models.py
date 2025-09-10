@@ -5,6 +5,23 @@ class Player(models.Model):
     user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True)
     name = models.CharField(max_length=100, unique=True)
     bio = models.TextField(blank=True, default="")
+
+    # === 默认荣誉（选手可自勾选，管理员可改） ===
+    honor_umaleague_season_champ  = models.BooleanField(default=False)  # UMA League 赛季冠军
+    honor_umaleague_stage_champ   = models.BooleanField(default=False)  # UMA League 赛段冠军
+    honor_loh96_hero              = models.BooleanField(default=False)  # LOH96 杰
+    honor_aupl_champion           = models.BooleanField(default=False)  # AUPL 冠军
+    honor_nxns_champion           = models.BooleanField(default=False)  # NXNS 冠军
+
+    def honors_dict(self):
+        return {
+            "honor_umaleague_season_champ": self.honor_umaleague_season_champ,
+            "honor_umaleague_stage_champ":  self.honor_umaleague_stage_champ,
+            "honor_loh96_hero":             self.honor_loh96_hero,
+            "honor_aupl_champion":          self.honor_aupl_champion,
+            "honor_nxns_champion":          self.honor_nxns_champion,
+        }
+
     def __str__(self):
         return self.name
 
@@ -116,15 +133,13 @@ class Announcement(models.Model):
     title = models.CharField(max_length=200)
     body = models.TextField(help_text="支持换行。可写少量HTML（如 <br>、<a>）。")
     is_active = models.BooleanField(default=True)
-    show_on_login = models.BooleanField(default=True)   # 是否在登录页显示
-    show_on_home = models.BooleanField(default=False)  # 是否在首页显示（可选）
+    show_on_login = models.BooleanField(default=True)
+    show_on_home = models.BooleanField(default=False)
     start_at = models.DateTimeField(null=True, blank=True)
     end_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
-
     class Meta:
         ordering = ["-updated_at"]
-
     def __str__(self):
         return f"{self.title} ({'ON' if self.is_active else 'OFF'})"
 
@@ -137,9 +152,7 @@ class SelfReport(models.Model):
     place = models.IntegerField()                   # 填报名次
     submitted_at = models.DateTimeField(auto_now_add=True)
     verified = models.BooleanField(default=False)
-
     class Meta:
         unique_together = ("event", "player", "round_no", "horse_index")
-
     def __str__(self):
         return f"{self.event} / {self.player} / R{self.round_no} H{self.horse_index} = {self.place}"

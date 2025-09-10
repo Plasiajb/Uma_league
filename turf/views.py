@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Sum, Count
+from django.db.models.functions import Lower
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -19,7 +20,6 @@ def home(request):
     ctx = {"stage": stage, "events": events}
     return render(request, "guest/home.html", ctx)
 
-# views.py → event_detail 内
 def event_detail(request, event_id: int):
     event = get_object_or_404(Event, id=event_id)
     standings = Standing.objects.filter(event=event).order_by('rank')
@@ -28,7 +28,7 @@ def event_detail(request, event_id: int):
     gms = GroupMembership.objects.filter(event=event).order_by('round_no','group__name','player__name')
     published = PublishedRank.objects.filter(event=event).order_by('rank')
 
-    # 新增：是否显示“战绩填报”按钮（登录且本赛事有分组）
+    # 已登录且在本赛事有分组 → 显示“战绩填报”
     can_report = False
     if request.user.is_authenticated:
         player = getattr(request.user, "player", None) or Player.objects.filter(user=request.user).first()
@@ -41,19 +41,29 @@ def event_detail(request, event_id: int):
     }
     return render(request, "guest/event_detail.html", ctx)
 
+# ===================== 选手列表 =====================
 def players(request):
-    # 总奖金
-    payouts = Payout.objects.values('player__name').annotate(total=Sum('total_amount'))
-    # 参赛“场次”统计（以 Standing 行数近似；也可 Count('event', distinct=True)）
-    standings_counts = Standing.objects.values('player__name').annotate(events=Count('event', distinct=True))
-    totals = {}
-    for p in payouts:
-        totals[p['player__name']] = {"total": p['total'], "events": 0}
-    for c in standings_counts:
-        totals.setdefault(c['player__name'], {"total": 0, "events": 0})
-        totals[c['player__name']]["events"] = c['events']
-    rows = [{"player": k, "total": v["total"], "events": v["events"]} for k,v in totals.items()]
-    rows.sort(key=lambda r: (- (r["total"] or 0), r["player"]))
+    # 奖金汇总
+    payout_map = {
+        r['player_id']: (r['total'] or 0)
+        for r in Payout.objects.values('player_id').annotate(total=Sum('total_amount'))
+    }
+    # 参赛赛事数（distinct event）
+    events_map = {
+        r['player_id']: r['ev']
+        for r in Standing.objects.values('player_id').annotate(ev=Count('event', distinct=True))
+    }
+
+    rows = []
+    for p in Player.objects.all().order_by('name'):
+        rows.append({
+            "id": p.id,
+            "name": p.name,
+            "total": payout_map.get(p.id, 0),
+            "events": events_map.get(p.id, 0),
+            "honors": p.honors_dict(),
+        })
+    rows.sort(key=lambda x: (-x["total"], x["name"]))
     return render(request, "guest/players.html", {"rows": rows})
 
 def qualified(request):
@@ -119,40 +129,24 @@ def enroll_event(request, event_id):
 # ---------------------------
 # 战绩自助填报
 # ---------------------------
-
 def _per_round_horses(event: Event) -> int:
-    """
-    每轮几匹马：
-      - 前哨战/选拔赛：1
-      - 结算赛/Final：2
-    """
-    if event.format in ("settlement", "final"):
-        return 2
-    return 1
-
-# 在文件顶部已 import 的不动
-# 只替换 report_results 这个视图体内 “existing” 和渲染部分
+    return 2 if event.format in ("settlement", "final") else 1
 
 @login_required
 def report_results(request, event_id: int):
     event = get_object_or_404(Event, id=event_id)
-
-    # 允许没有绑定 Player 的账号能提示
     player = Player.objects.filter(user=request.user).first()
     if not player:
         messages.error(request, "当前账号还没有选手名，请先在『我的』页面创建。")
         return redirect("me")
 
-    memberships = list(
-        GroupMembership.objects.filter(event=event, player=player).order_by("round_no")
-    )
+    memberships = list(GroupMembership.objects.filter(event=event, player=player).order_by("round_no"))
     if not memberships:
         messages.error(request, "你未参与本赛事或尚未分组。")
         return redirect("event_detail", event_id=event.id)
 
-    horses = 2 if event.format in ("settlement", "final") else 1
+    horses = _per_round_horses(event)
 
-    # 关键：做成 "r{round}_h{h}" -> place 的扁平字典，模板直接用，不需要过滤器
     prefill = {}
     for sr in SelfReport.objects.filter(event=event, player=player, verified=False):
         prefill[f"r{sr.round_no}_h{sr.horse_index}"] = sr.place
@@ -185,22 +179,14 @@ def report_results(request, event_id: int):
         "event": event,
         "memberships": memberships,
         "horses": horses,
-        "prefill": prefill,   # <— 传这个
+        "prefill": prefill,
     })
 
-from django.views.decorators.http import require_http_methods
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from .models import Event, Group, Heat, GroupMembership, Player
-
+# ---------------------------
+# 房主上传房号
+# ---------------------------
 @login_required
-@require_http_methods(["GET", "POST"])
 def set_room_code(request, event_id: int, round_no: int, group_name: str):
-    """
-    只有该 Heat 的“房主”（本组按 player.name 升序的第一个）可以设置/修改房号。
-    其他人访问会被友好提示并拒绝提交。
-    """
     event = get_object_or_404(Event, id=event_id)
     group = get_object_or_404(Group, event=event, name=group_name)
     heat  = get_object_or_404(Heat, event=event, round_no=round_no, group=group)
@@ -210,10 +196,11 @@ def set_room_code(request, event_id: int, round_no: int, group_name: str):
         messages.error(request, "当前账号未绑定选手名，请先在『我的』页面创建。")
         return redirect("me")
 
-    # 本组成员（按名字升序），第一个即房主
+    # 本组成员（按名字升序，不区分大小写），第一名为房主
     members_qs = (GroupMembership.objects
                   .filter(event=event, round_no=round_no, group=group)
-                  .select_related("player").order_by("player__name"))
+                  .select_related("player")
+                  .order_by(Lower("player__name")))
     if not members_qs.filter(player=player).exists():
         messages.error(request, "你不在该组本轮名单中，无法设置房号。")
         return redirect("event_detail", event_id=event.id)
@@ -248,60 +235,50 @@ def set_room_code(request, event_id: int, round_no: int, group_name: str):
         "is_host": is_host,
     })
 
-from django.db.models import Sum
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-
-from .models import Player, Event, Standing, Result, Payout
-
+# ===================== 个人主页 =====================
 def player_profile(request, player_id: int):
-    """
-    选手个人主页：
-    - 显示选手基础信息（含简介）
-    - 历史战绩：该选手参加过的所有赛事（Standing 为准），显示名次/总分
-    - 总奖金：Payout.total_amount 汇总
-    - 成绩明细：按赛事 → 轮次列出每轮 place（排除 NPC）
-    权限：
-    - 若目标选手绑定的是 staff 账户，仅本人或 staff 可查看；其他人拒绝。
-    """
     player = get_object_or_404(Player, id=player_id)
 
-    # 屏蔽工作人员信息：仅本人或管理员可查看
+    # staff 账号仅本人或管理员可见
     if player.user and player.user.is_staff:
         if not (request.user.is_authenticated and (request.user.is_staff or request.user == player.user)):
             messages.error(request, "该选手资料仅限本人或管理员查看。")
             return redirect("home")
 
-    # 个人简介
-    bio = player.bio or ""
+    # 本人或管理员可编辑简介与荣誉
+    can_edit_honors = request.user.is_authenticated and (
+        (player.user and request.user == player.user) or request.user.is_staff
+    )
 
-    # 历史战绩（以 Standing 为准）
-    standings = (Standing.objects
-                 .filter(player=player)
-                 .select_related("event")
-                 .order_by("-event__id"))
+    if request.method == "POST" and can_edit_honors:
+        fields = [
+            "honor_umaleague_season_champ",
+            "honor_umaleague_stage_champ",
+            "honor_loh96_hero",
+            "honor_aupl_champion",
+            "honor_nxns_champion",
+        ]
+        for f in fields:
+            setattr(player, f, bool(request.POST.get(f)))
+        if "bio" in request.POST:
+            player.bio = request.POST.get("bio","")
+        player.save()
+        messages.success(request, "已保存个人荣誉与简介。")
+        return redirect("player_profile", player_id=player.id)
 
-    # 该选手总奖金
-    payout_sum = (Payout.objects
-                  .filter(player=player)
-                  .aggregate(total=Sum("total_amount"))
-                  .get("total") or 0)
+    # 奖金汇总
+    payout_sum = (Payout.objects.filter(player=player).aggregate(total=Sum("total_amount")).get("total") or 0)
 
-    # 明细成绩：按赛事聚合 → 每轮（round_no） & 组别 & 名次
-    results_qs = (Result.objects
-                  .filter(player=player, is_npc=False)
-                  .select_related("heat", "heat__event", "heat__group")
-                  .order_by("-heat__event__id", "heat__round_no", "heat__group__name"))
+    # 历史战绩（Standing 为准）+ 每轮明细（Result）
+    standings = (Standing.objects.filter(player=player).select_related("event").order_by("-event__id"))
+    results_qs = (Result.objects.filter(player=player, is_npc=False)
+                  .select_related("heat","heat__event","heat__group")
+                  .order_by("-heat__event__id","heat__round_no","heat__group__name"))
 
-    # 组装成 {event_id: {"event": Event, "rows": [...]}}
     events_map = {}
     for r in results_qs:
         eid = r.heat.event_id
-        bucket = events_map.setdefault(eid, {
-            "event": r.heat.event,
-            "rows": []
-        })
+        bucket = events_map.setdefault(eid, {"event": r.heat.event, "rows": []})
         bucket["rows"].append({
             "round_no": r.heat.round_no,
             "group": r.heat.group.name if r.heat.group else "",
@@ -309,22 +286,20 @@ def player_profile(request, player_id: int):
             "place": r.place,
         })
 
-    # 为了在页面上配合 standings 一起展示，构造一个列表
     events_detail = []
     for st in standings:
-        item = {
+        events_detail.append({
             "event": st.event,
             "rank": st.rank,
             "total_score": st.total_score,
             "rows": events_map.get(st.event.id, {}).get("rows", []),
-        }
-        events_detail.append(item)
+        })
 
     ctx = {
         "player": player,
-        "bio": bio,
+        "bio": player.bio or "",
         "payout_sum": payout_sum,
-        "events_detail": events_detail,  # 每个元素：{event, rank, total_score, rows:[{round_no,group,horse_no,place}]}
+        "events_detail": events_detail,
+        "can_edit_honors": can_edit_honors,
     }
     return render(request, "guest/player_profile.html", ctx)
-
