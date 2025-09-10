@@ -11,14 +11,26 @@
     {% for r in rows %}
     <tr>
       <td><a href="{% url 'player_profile' r.id %}">{{ r.name }}</a></td>
-      <td>{{ r.total|floatformat:2 }}</td>
-      <td>{{ r.events }}</td>
+      <td>
+        {% if r.total == "隐藏" %}
+          <span class="muted">隐藏</span>
+        {% else %}
+          {{ r.total|floatformat:2 }}
+        {% endif %}
+      </td>
+      <td>
+        {% if r.events == "隐藏" %}
+          <span class="muted">隐藏</span>
+        {% else %}
+          {{ r.events }}
+        {% endif %}
+      </td>
       <td style="text-align:left">
         {% if r.honors.honor_umaleague_season_champ %}<span class="badge">赛季冠军</span>{% endif %}
-        {% if r.honors.honor_umaleague_stage_champ  %}<span class="badge">赛段冠军</span>{% endif %}
-        {% if r.honors.honor_loh96_hero             %}<span class="badge">LOH96杰</span>{% endif %}
-        {% if r.honors.honor_aupl_champion          %}<span class="badge">AUPL冠军</span>{% endif %}
-        {% if r.honors.honor_nxns_champion          %}<span class="badge">NXNS冠军</span>{% endif %}
+        {% if r.honors.honor_umaleague_stage_champ %}<span class="badge">赛段冠军</span>{% endif %}
+        {% if r.honors.honor_loh96_hero %}<span class="badge">LOH96杰</span>{% endif %}
+        {% if r.honors.honor_aupl_champion %}<span class="badge">AUPL冠军</span>{% endif %}
+        {% if r.honors.honor_nxns_champion %}<span class="badge">NXNS冠军</span>{% endif %}
       </td>
     </tr>
     {% endfor %}

@@ -16,10 +16,16 @@ from .utils import recompute_standings, compute_payouts_for_event, seed_round1, 
 # 基础模型注册
 # =========================
 
+# 在 PlayerAdmin 里扩展展示/筛选
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
     search_fields = ["name","user__username"]
-    list_display = ["id","name","user"]
+    list_display  = ["id","name","user","public_results",
+                     "honor_umaleague_season_champ","honor_umaleague_stage_champ",
+                     "honor_loh96_hero","honor_aupl_champion","honor_nxns_champion"]
+    list_filter   = ["public_results",
+                     "honor_umaleague_season_champ","honor_umaleague_stage_champ",
+                     "honor_loh96_hero","honor_aupl_champion","honor_nxns_champion"]
 
 @admin.register(Season)
 class SeasonAdmin(admin.ModelAdmin):

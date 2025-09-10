@@ -245,10 +245,14 @@ def player_profile(request, player_id: int):
             messages.error(request, "该选手资料仅限本人或管理员查看。")
             return redirect("home")
 
-    # 本人或管理员可编辑简介与荣誉
-    can_edit_honors = request.user.is_authenticated and (
-        (player.user and request.user == player.user) or request.user.is_staff
-    )
+    # 本人/管理员标记
+    is_owner = request.user.is_authenticated and (player.user and request.user == player.user)
+    is_staff = request.user.is_authenticated and request.user.is_staff
+    # 本人或管理员可编辑简介与荣誉/可见性
+    can_edit_honors = is_owner or is_staff
+
+    # 他人是否被允许查看战绩与奖金
+    can_view_private = player.public_results or is_owner or is_staff
 
     if request.method == "POST" and can_edit_honors:
         fields = [
@@ -260,40 +264,46 @@ def player_profile(request, player_id: int):
         ]
         for f in fields:
             setattr(player, f, bool(request.POST.get(f)))
+        # 简介
         if "bio" in request.POST:
             player.bio = request.POST.get("bio","")
+        # 可见性开关（新增）
+        player.public_results = bool(request.POST.get("public_results"))
         player.save()
-        messages.success(request, "已保存个人荣誉与简介。")
+        messages.success(request, "已保存个人简介、荣誉与可见性设置。")
         return redirect("player_profile", player_id=player.id)
 
-    # 奖金汇总
-    payout_sum = (Payout.objects.filter(player=player).aggregate(total=Sum("total_amount")).get("total") or 0)
-
-    # 历史战绩（Standing 为准）+ 每轮明细（Result）
-    standings = (Standing.objects.filter(player=player).select_related("event").order_by("-event__id"))
-    results_qs = (Result.objects.filter(player=player, is_npc=False)
-                  .select_related("heat","heat__event","heat__group")
-                  .order_by("-heat__event__id","heat__round_no","heat__group__name"))
-
-    events_map = {}
-    for r in results_qs:
-        eid = r.heat.event_id
-        bucket = events_map.setdefault(eid, {"event": r.heat.event, "rows": []})
-        bucket["rows"].append({
-            "round_no": r.heat.round_no,
-            "group": r.heat.group.name if r.heat.group else "",
-            "horse_no": r.horse_no,
-            "place": r.place,
-        })
-
+    # 若不可见，则不取奖金与明细
+    payout_sum = 0
     events_detail = []
-    for st in standings:
-        events_detail.append({
-            "event": st.event,
-            "rank": st.rank,
-            "total_score": st.total_score,
-            "rows": events_map.get(st.event.id, {}).get("rows", []),
-        })
+    if can_view_private:
+        payout_sum = (Payout.objects.filter(player=player)
+                      .aggregate(total=Sum("total_amount")).get("total") or 0)
+
+        standings = (Standing.objects.filter(player=player)
+                     .select_related("event").order_by("-event__id"))
+        results_qs = (Result.objects.filter(player=player, is_npc=False)
+                      .select_related("heat","heat__event","heat__group")
+                      .order_by("-heat__event__id","heat__round_no","heat__group__name"))
+
+        events_map = {}
+        for r in results_qs:
+            eid = r.heat.event_id
+            bucket = events_map.setdefault(eid, {"event": r.heat.event, "rows": []})
+            bucket["rows"].append({
+                "round_no": r.heat.round_no,
+                "group": r.heat.group.name if r.heat.group else "",
+                "horse_no": r.horse_no,
+                "place": r.place,
+            })
+
+        for st in standings:
+            events_detail.append({
+                "event": st.event,
+                "rank": st.rank,
+                "total_score": st.total_score,
+                "rows": events_map.get(st.event.id, {}).get("rows", []),
+            })
 
     ctx = {
         "player": player,
@@ -301,5 +311,6 @@ def player_profile(request, player_id: int):
         "payout_sum": payout_sum,
         "events_detail": events_detail,
         "can_edit_honors": can_edit_honors,
+        "can_view_private": can_view_private,  # 模板按这个决定是否显示“总奖金/历史战绩”
     }
     return render(request, "guest/player_profile.html", ctx)

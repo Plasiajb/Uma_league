@@ -5,6 +5,8 @@ class Player(models.Model):
     user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True)
     name = models.CharField(max_length=100, unique=True)
     bio = models.TextField(blank=True, default="")
+    public_results = models.BooleanField(default=True, help_text="允许他人查看本人的历史战绩与总奖金")
+
 
     # === 默认荣誉（选手可自勾选，管理员可改） ===
     honor_umaleague_season_champ  = models.BooleanField(default=False)  # UMA League 赛季冠军
