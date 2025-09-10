@@ -29,10 +29,21 @@
 
 <h3>房间号</h3>
 <table>
-  <thead><tr><th>轮次</th><th>组别</th><th>房间号</th></tr></thead>
+  <thead>
+    <tr><th>轮次</th><th>组别</th><th>房间号</th><th>操作</th></tr>
+  </thead>
   <tbody>
   {% for h in heats %}
-    <tr><td>{{ h.round_no }}</td><td>{{ h.group.name }}</td><td>{{ h.room_code }}</td></tr>
+    <tr>
+      <td>{{ h.round_no }}</td>
+      <td>{{ h.group.name }}</td>
+      <td>{{ h.room_code }}</td>
+      <td>
+        {% if user.is_authenticated %}
+          <a href="{% url 'set_room_code' event.id h.round_no h.group.name %}">填写/修改</a>
+        {% endif %}
+      </td>
+    </tr>
   {% endfor %}
   </tbody>
 </table>

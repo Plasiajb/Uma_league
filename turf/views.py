@@ -187,3 +187,144 @@ def report_results(request, event_id: int):
         "horses": horses,
         "prefill": prefill,   # <— 传这个
     })
+
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from .models import Event, Group, Heat, GroupMembership, Player
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def set_room_code(request, event_id: int, round_no: int, group_name: str):
+    """
+    只有该 Heat 的“房主”（本组按 player.name 升序的第一个）可以设置/修改房号。
+    其他人访问会被友好提示并拒绝提交。
+    """
+    event = get_object_or_404(Event, id=event_id)
+    group = get_object_or_404(Group, event=event, name=group_name)
+    heat  = get_object_or_404(Heat, event=event, round_no=round_no, group=group)
+
+    player = Player.objects.filter(user=request.user).first()
+    if not player:
+        messages.error(request, "当前账号未绑定选手名，请先在『我的』页面创建。")
+        return redirect("me")
+
+    # 本组成员（按名字升序），第一个即房主
+    members_qs = (GroupMembership.objects
+                  .filter(event=event, round_no=round_no, group=group)
+                  .select_related("player").order_by("player__name"))
+    if not members_qs.filter(player=player).exists():
+        messages.error(request, "你不在该组本轮名单中，无法设置房号。")
+        return redirect("event_detail", event_id=event.id)
+
+    host_player = members_qs.first().player
+    is_host = (player.id == host_player.id)
+
+    if request.method == "POST":
+        if not is_host:
+            messages.error(request, f"只有房主（{host_player.name}）可以设置/修改房号。")
+            return redirect("event_detail", event_id=event.id)
+
+        code = (request.POST.get("room_code") or "").strip()
+        if not code:
+            messages.error(request, "房号不能为空。")
+            return redirect("set_room_code", event_id=event.id, round_no=round_no, group_name=group_name)
+        if len(code) > 50:
+            messages.error(request, "房号过长（≤50字符）。")
+            return redirect("set_room_code", event_id=event.id, round_no=round_no, group_name=group_name)
+
+        heat.room_code = code
+        heat.save(update_fields=["room_code"])
+        messages.success(request, f"已更新第 {round_no} 轮 {group_name} 组房号为：{code}")
+        return redirect("event_detail", event_id=event.id)
+
+    return render(request, "turf/set_room_code.html", {
+        "event": event,
+        "round_no": round_no,
+        "group": group,
+        "heat": heat,
+        "host_player": host_player,
+        "is_host": is_host,
+    })
+
+from django.db.models import Sum
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+
+from .models import Player, Event, Standing, Result, Payout
+
+def player_profile(request, player_id: int):
+    """
+    选手个人主页：
+    - 显示选手基础信息（含简介）
+    - 历史战绩：该选手参加过的所有赛事（Standing 为准），显示名次/总分
+    - 总奖金：Payout.total_amount 汇总
+    - 成绩明细：按赛事 → 轮次列出每轮 place（排除 NPC）
+    权限：
+    - 若目标选手绑定的是 staff 账户，仅本人或 staff 可查看；其他人拒绝。
+    """
+    player = get_object_or_404(Player, id=player_id)
+
+    # 屏蔽工作人员信息：仅本人或管理员可查看
+    if player.user and player.user.is_staff:
+        if not (request.user.is_authenticated and (request.user.is_staff or request.user == player.user)):
+            messages.error(request, "该选手资料仅限本人或管理员查看。")
+            return redirect("home")
+
+    # 个人简介
+    bio = player.bio or ""
+
+    # 历史战绩（以 Standing 为准）
+    standings = (Standing.objects
+                 .filter(player=player)
+                 .select_related("event")
+                 .order_by("-event__id"))
+
+    # 该选手总奖金
+    payout_sum = (Payout.objects
+                  .filter(player=player)
+                  .aggregate(total=Sum("total_amount"))
+                  .get("total") or 0)
+
+    # 明细成绩：按赛事聚合 → 每轮（round_no） & 组别 & 名次
+    results_qs = (Result.objects
+                  .filter(player=player, is_npc=False)
+                  .select_related("heat", "heat__event", "heat__group")
+                  .order_by("-heat__event__id", "heat__round_no", "heat__group__name"))
+
+    # 组装成 {event_id: {"event": Event, "rows": [...]}}
+    events_map = {}
+    for r in results_qs:
+        eid = r.heat.event_id
+        bucket = events_map.setdefault(eid, {
+            "event": r.heat.event,
+            "rows": []
+        })
+        bucket["rows"].append({
+            "round_no": r.heat.round_no,
+            "group": r.heat.group.name if r.heat.group else "",
+            "horse_no": r.horse_no,
+            "place": r.place,
+        })
+
+    # 为了在页面上配合 standings 一起展示，构造一个列表
+    events_detail = []
+    for st in standings:
+        item = {
+            "event": st.event,
+            "rank": st.rank,
+            "total_score": st.total_score,
+            "rows": events_map.get(st.event.id, {}).get("rows", []),
+        }
+        events_detail.append(item)
+
+    ctx = {
+        "player": player,
+        "bio": bio,
+        "payout_sum": payout_sum,
+        "events_detail": events_detail,  # 每个元素：{event, rank, total_score, rows:[{round_no,group,horse_no,place}]}
+    }
+    return render(request, "guest/player_profile.html", ctx)
+

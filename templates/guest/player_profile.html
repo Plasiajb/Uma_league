@@ -1,0 +1,65 @@
+{% load static %}
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{{ player.name }} - 个人主页</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;padding:24px;}
+    h2{margin:0 0 4px;}
+    .muted{color:#666;font-size:13px;}
+    .card{border:1px solid #e5e5e5;border-radius:8px;padding:16px;margin:16px 0;}
+    table{border-collapse:collapse;width:100%}
+    th,td{border:1px solid #eee;padding:8px;text-align:center}
+    th{background:#fafafa}
+    .section-title{margin-top:24px}
+  </style>
+</head>
+<body>
+  <h2>{{ player.name }}</h2>
+  <div class="muted">个人主页</div>
+
+  <div class="card">
+    <h3>个人简介</h3>
+    <div>{{ bio|default:"（暂无简介）" }}</div>
+  </div>
+
+  <div class="card">
+    <h3>总奖金</h3>
+    <div><b>{{ payout_sum|floatformat:2 }}</b></div>
+  </div>
+
+  <div class="card">
+    <h3>历史战绩</h3>
+    {% if events_detail %}
+      {% for it in events_detail %}
+        <div class="section-title"><b>{{ it.event.name }}</b></div>
+        <div class="muted">名次：{{ it.rank }} ｜ 累计积分：{{ it.total_score }}</div>
+        {% if it.rows %}
+          <table style="margin-top:8px;">
+            <thead>
+              <tr><th>轮次</th><th>组别</th><th>马#</th><th>名次</th></tr>
+            </thead>
+            <tbody>
+              {% for r in it.rows %}
+                <tr>
+                  <td>{{ r.round_no }}</td>
+                  <td>{{ r.group }}</td>
+                  <td>{{ r.horse_no }}</td>
+                  <td>{{ r.place }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="muted">（暂无每轮明细）</div>
+        {% endif %}
+      {% endfor %}
+    {% else %}
+      <div class="muted">（该选手暂无参赛记录）</div>
+    {% endif %}
+  </div>
+
+  <p><a href="{% url 'players' %}">返回选手列表</a></p>
+</body>
+</html>
