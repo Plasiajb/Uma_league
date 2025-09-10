@@ -244,3 +244,11 @@ def approve_reports(self, request, queryset):
             continue
 
     messages.success(request, f"已审核并写入 {count} 轮成绩，并已重算总分与排名。")
+
+@admin.register(SelfReport)
+class SelfReportAdmin(admin.ModelAdmin):
+    list_display = ("event","player","round_no","horse_index","place","verified","submitted_at")
+    list_filter = ("event","verified")
+    search_fields = ("player__name",)
+    actions = [approve_reports]
+
