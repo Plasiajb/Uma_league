@@ -106,14 +106,17 @@ def logout_view(request):
 
 @login_required
 def me(request):
-    player = getattr(request.user, "player", None) or Player.objects.filter(user=request.user).first()
-    if request.method=="POST":
-        bio = request.POST.get("bio","")
-        if player:
-            player.bio = bio
-            player.save()
-            messages.success(request,"已保存")
-    return render(request,"guest/me.html", {"player": player})
+    # 如果已绑定 Player，直接跳到个人主页编辑
+    player = Player.objects.filter(user=request.user).first()
+    if player:
+        return redirect("player_profile", player_id=player.id)
+
+    # 否则还是提示去创建选手名
+    if request.method == "POST":
+        # 你已有的创建逻辑（如果有）
+        pass
+    messages.info(request, "当前账号未绑定选手名，请先创建后再进入个人主页。")
+    return render(request, "guest/me.html", {"player": None})
 
 @login_required
 def enroll_event(request, event_id):
