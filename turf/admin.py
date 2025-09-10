@@ -3,6 +3,8 @@ from django.db import models
 from django.db.models import Q
 from itertools import groupby
 from django.db import transaction
+from .utils import recompute_standings
+from .models import Event, GroupMembership, Heat, Result, SelfReport
 
 from .models import (
     Player, Season, Stage, Event, Group, Enrollment, Heat, Result,
@@ -196,40 +198,49 @@ EventAdmin.actions = list(getattr(EventAdmin, "actions", [])) + [action_seed_van
 #   自助填报审核 → 正式成绩
 # =========================
 
-@admin.register(SelfReport)
-class SelfReportAdmin(admin.ModelAdmin):
-    list_display = ("event", "player", "round_no", "horse_index", "place", "verified", "submitted_at")
-    list_filter = ("event", "verified")
-    search_fields = ("player__name", )
 
-    @admin.action(description="审核通过并写入正式成绩")
-    def approve_reports(self, request, queryset):
-        qs = queryset.filter(verified=False).order_by("event_id", "player_id", "round_no", "horse_index")
-        count = 0
+@admin.action(description="审核通过并写入正式成绩")
+def approve_reports(self, request, queryset):
+    # 仅处理未审核
+    qs = queryset.filter(verified=False).order_by("event_id", "player_id", "round_no", "horse_index")
+    count = 0
+    touched_events = set()  # 记录受影响的赛事，用于稍后重算 standings
 
-        def key(r): return (r.event_id, r.player_id, r.round_no)
-        for (event_id, player_id, rnd), grp in groupby(qs, key=key):
-            grp = list(grp)
-            total_place = sum(int(r.place) for r in grp)
+    def key(r): return (r.event_id, r.player_id, r.round_no)
+    for (event_id, player_id, rnd), grp in groupby(qs, key=key):
+        grp = list(grp)
+        # 单马赛：该轮通常只有一条；双马赛：该轮可能两条，取和
+        total_place = sum(int(r.place) for r in grp)
 
-            try:
-                gm = GroupMembership.objects.get(event_id=event_id, player_id=player_id, round_no=rnd)
-                heat = Heat.objects.get(event_id=event_id, round_no=rnd, group=gm.group)
-            except GroupMembership.DoesNotExist:
-                messages.error(request, f"[event={event_id}, player={player_id}, round={rnd}] 无分组记录。")
-                continue
-            except Heat.DoesNotExist:
-                messages.error(request, f"[event={event_id}, round={rnd}] 无 Heat 记录。")
-                continue
+        try:
+            gm = GroupMembership.objects.get(event_id=event_id, player_id=player_id, round_no=rnd)
+            heat = Heat.objects.get(event_id=event_id, round_no=rnd, group=gm.group)
+        except GroupMembership.DoesNotExist:
+            messages.error(request, f"[event={event_id}, player={player_id}, round={rnd}] 无分组记录。")
+            continue
+        except Heat.DoesNotExist:
+            messages.error(request, f"[event={event_id}, round={rnd}] 无 Heat 记录。")
+            continue
 
-            Result.objects.update_or_create(
-                event_id=event_id, player_id=player_id, heat=heat,
-                defaults={"place": total_place}
-            )
-            SelfReport.objects.filter(event_id=event_id, player_id=player_id, round_no=rnd).update(verified=True)
-            count += 1
+        # 用 (heat, player, horse_no) 作为唯一键；固定写 horse_no=1
+        Result.objects.update_or_create(
+            heat=heat,
+            player_id=player_id,
+            horse_no=1,
+            defaults={"place": total_place, "is_npc": False},
+        )
 
-        messages.success(request, f"已审核并写入 {count} 轮成绩。")
+        # 标记该轮自填记录为已审核
+        SelfReport.objects.filter(event_id=event_id, player_id=player_id, round_no=rnd).update(verified=True)
+        count += 1
+        touched_events.add(event_id)
 
-    actions = ["approve_reports"]
+    # 审核完，自动重算受影响赛事的 standings（把 5 轮求和、排名一并更新）
+    for eid in touched_events:
+        try:
+            event = Event.objects.get(id=eid)
+            recompute_standings(event)
+        except Event.DoesNotExist:
+            continue
 
+    messages.success(request, f"已审核并写入 {count} 轮成绩，并已重算总分与排名。")
