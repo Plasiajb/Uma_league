@@ -1,6 +1,5 @@
 {% extends "guest/base.html" %}
-
-{% block title %}{{ event.name }} - 战绩填报{% endblock %}
+{% load turf_extras %}  {% block title %}{{ event.name }} - 战绩填报{% endblock %}
 
 {% block content %}
 <h2 class="mb-3">战绩填报：{{ event.name }}</h2>
