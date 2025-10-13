@@ -48,10 +48,45 @@
     <div class="accordion-item">
         <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGroups">分组名单</button></h2>
         <div id="collapseGroups" class="accordion-collapse collapse" data-bs-parent="#eventDetailsAccordion">
-            <div class="accordion-body"></div>
+            <div class="accordion-body">
+                <div class="accordion" id="groupMembersByRound">
+                    {% for gm in group_members %}
+                        {% ifchanged gm.round_no %}
+                            {% if not forloop.first %}
+                                    </tbody></table>
+                                </div>
+                            </div>
+                        </div>
+                            {% endif %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#group-round-collapse-{{ gm.round_no }}">
+                                    第 {{ gm.round_no }} 轮
+                                </button>
+                            </h2>
+                            <div id="group-round-collapse-{{ gm.round_no }}" class="accordion-collapse collapse" data-bs-parent="#groupMembersByRound">
+                                <div class="accordion-body">
+                                    <table class="table table-sm table-borderless">
+                                        <thead><tr><th>组别</th><th>选手</th></tr></thead>
+                                        <tbody>
+                        {% endifchanged %}
+                        <tr>
+                            <td>{{ gm.group.name }}</td>
+                            <td><a href="{% url 'player_profile' gm.player.id %}">{{ gm.player.name }}</a></td>
+                        </tr>
+                        {% if forloop.last %}
+                                    </tbody></table>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% empty %}
+                        <p class="text-muted">暂无分组信息。</p>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
     </div>
-
     <div class="accordion-item">
         <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseStandings">积分榜</button></h2>
         <div id="collapseStandings" class="accordion-collapse collapse" data-bs-parent="#eventDetailsAccordion">
@@ -65,6 +100,8 @@
                           <td><a href="{% url 'player_profile' s.player.id %}">{{ s.player.name }}</a></td>
                           <td>{{ s.total_score }}</td>
                         </tr>
+                      {% empty %}
+                        <tr><td colspan="3" class="text-center text-muted">暂无积分信息。</td></tr>
                       {% endfor %}
                     </tbody>
                   </table>
@@ -75,8 +112,46 @@
     <div class="accordion-item">
         <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseResults">每轮结果</button></h2>
         <div id="collapseResults" class="accordion-collapse collapse" data-bs-parent="#eventDetailsAccordion">
-            <div class="accordion-body"></div>
+            <div class="accordion-body">
+                <div class="accordion" id="resultsByRound">
+                    {% for r in results %}
+                        {% ifchanged r.heat.round_no %}
+                            {% if not forloop.first %}
+                                    </tbody></table>
+                                </div>
+                            </div>
+                        </div>
+                            {% endif %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#result-round-collapse-{{ r.heat.round_no }}">
+                                    第 {{ r.heat.round_no }} 轮
+                                </button>
+                            </h2>
+                            <div id="result-round-collapse-{{ r.heat.round_no }}" class="accordion-collapse collapse" data-bs-parent="#resultsByRound">
+                                <div class="accordion-body">
+                                    <table class="table table-sm table-borderless">
+                                        <thead><tr><th>组别</th><th>选手</th><th>马#</th><th>名次</th></tr></thead>
+                                        <tbody>
+                        {% endifchanged %}
+                        <tr>
+                            <td>{{ r.heat.group.name }}</td>
+                            <td><a href="{% url 'player_profile' r.player.id %}">{{ r.player.name }}</a></td>
+                            <td>{{ r.horse_no }}</td>
+                            <td>{{ r.place }}</td>
+                        </tr>
+                        {% if forloop.last %}
+                                    </tbody></table>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% empty %}
+                        <p class="text-muted">暂无比赛结果。</p>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
     </div>
-</div>
+    </div>
 {% endblock %}
