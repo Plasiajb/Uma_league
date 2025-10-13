@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>欢迎来到 Uma League</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --transition-speed: 750ms;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+
+        /* 双栏容器 */
+        .split-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 面板通用样式 */
+        .panel {
+            flex: 1; /* 初始状态各占一半 */
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            transition: flex var(--transition-speed) ease-in-out;
+        }
+
+        /* 左侧图片栏 */
+        .panel.left {
+            background-image: url('/static/images/landing-character.jpg');
+            background-size: cover;
+            background-position: center;
+            /* 入场动画：从左侧滑入 */
+            animation: slideInLeft 1s ease-out forwards;
+        }
+
+        /* 右侧内容栏 */
+        .panel.right {
+            background-color: #1a1a1a; /* 深邃的炭黑色 */
+            color: white;
+            /* 入场动画：从右侧滑入 */
+            animation: slideInRight 1s ease-out forwards;
+        }
+        
+        /* 鼠标悬停交互效果 */
+        .split-container:hover .panel.left:hover { flex: 1.5; }
+        .split-container:hover .panel.right:hover { flex: 1.5; }
+
+        /* 右侧内容容器 */
+        .content-wrapper {
+            text-align: center;
+            opacity: 0; /* 初始透明 */
+            /* 内容入场动画：延迟后淡入 */
+            animation: fadeInContent 1s ease-in forwards 0.7s;
+        }
+
+        .logo {
+            max-width: 80%;
+            height: auto;
+            margin-bottom: 2rem;
+        }
+
+        /* 自定义信息区域 */
+        .info-panel {
+            margin-top: 2rem;
+            margin-bottom: 3rem;
+            color: #ccc;
+            font-size: 0.9rem;
+            line-height: 1.8;
+        }
+        .info-panel strong {
+            color: white;
+            margin-right: 8px;
+        }
+
+        /* "进入比赛" 按钮 */
+        .enter-button {
+            display: inline-block;
+            padding: 12px 35px;
+            border: 2px solid #00aaff;
+            border-radius: 50px;
+            color: #00aaff;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-decoration: none;
+            background-color: transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 10px rgba(0, 170, 255, 0.5);
+        }
+
+        .enter-button:hover {
+            background-color: #00aaff;
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 170, 255, 0.7);
+        }
+
+        /* 定义动画 */
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        @keyframes fadeInContent {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="split-container">
+        <div class="panel left"></div>
+
+        <div class="panel right">
+            <div class="content-wrapper">
+                <img src="/static/images/landing-logo.png" alt="Uma League S1 Logo" class="logo">
+                
+                <div class="info-panel">
+                    <p><strong>赛事运营:</strong> [请在此处填写运营者名称]</p>
+                    <p><strong>网页维护:</strong> [请在此处填写维护者名称]</p>
+                    <p><strong>赛事裁判:</strong> [请在此处填写裁判名称]</p>
+                </div>
+
+                <a href="{% url 'home' %}" class="enter-button">进入比赛</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

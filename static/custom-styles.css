@@ -4,28 +4,18 @@
 body {
     font-family: 'Noto Sans SC', sans-serif;
     
-    /* * *** 背景图最终设置 ***
-     * 1. 遮罩层: 我将之前的白色遮罩 (rgba(255,255,255...)) 
-     * 换成了更匹配图片风格的米色遮罩 (rgba(244, 241, 237...))。
-     * 2. 图片路径: 直接指向您本地的图片文件。
-     */
-    background-image: 
-        linear-gradient(rgba(244, 241, 237, 0.85), rgba(244, 241, 237, 0.85)),
-        url('/static/images/umasketch-bg.jpg');
-
-    background-size: cover;
-    background-attachment: fixed;
-    background-position: center;
+    /* 移除了之前的背景图设置，更换为简洁的浅灰色背景 */
+    background-color: #f8f9fa;
     color: #343a40;
 }
 
-/* 主要内容区域的卡片式背景，使用更匹配的米白色 */
+/* 主要内容区域调整为不透明白色背景 */
 .main-content-area {
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: #ffffff; /* 从半透明改为纯白 */
     padding: 2rem;
     border-radius: 0.5rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    backdrop-filter: blur(5px);
+    /* backdrop-filter 已不再需要，故移除 */
 }
 
 /* 统一卡片样式 */
@@ -57,26 +47,16 @@ body {
 }
 
 /* 自定义徽章颜色 */
-.badge.bg-success {
-    background-color: #198754 !important;
-}
-.badge.bg-primary {
-    background-color: #0d6efd !important;
-}
-.badge.bg-warning {
-    background-color: #ffc107 !important;
-}
-.badge.bg-info {
-    background-color: #0dcaf0 !important;
-}
-.badge.bg-danger {
-    background-color: #dc3545 !important;
-}
+.badge.bg-success { background-color: #198754 !important; }
+.badge.bg-primary { background-color: #0d6efd !important; }
+.badge.bg-warning { background-color: #ffc107 !important; }
+.badge.bg-info { background-color: #0dcaf0 !important; }
+.badge.bg-danger { background-color: #dc3545 !important; }
 
-/* 侧边栏公告 */
+/* 侧边栏公告调整为不透明白色背景 */
 .announcement-card {
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: #ffffff; /* 从半透明改为纯白 */
     border: none;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    backdrop-filter: blur(5px);
+    /* backdrop-filter 已不再需要，故移除 */
 }
