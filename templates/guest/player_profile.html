@@ -1,120 +1,109 @@
 {% extends "guest/base.html" %}
+
+{% block title %}{{ player.name }} - 个人主页{% endblock %}
+
 {% block content %}
-<h2>{{ player.name }}</h2>
-<p class="muted">个人主页</p>
+<h2 class="mb-1">{{ player.name }}</h2>
+<p class="text-muted">个人主页</p>
 
-<div class="card">
-  <h3>个人简介 & 荣誉</h3>
-  <form method="post">
-    {% csrf_token %}
+<div class="card mb-4">
+  <div class="card-body">
+    <h5 class="card-title">个人简介 & 荣誉</h5>
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="bio" class="form-label">简介：</label>
+        <textarea id="bio" name="bio" rows="3" class="form-control" {% if not can_edit_honors %}readonly{% endif %}>{{ bio }}</textarea>
+      </div>
 
-    <!-- 简介 -->
-    <div class="form-row">
-      <label for="bio">简介：</label>
-      <textarea id="bio" name="bio" rows="3" style="width:100%;" {% if not can_edit_honors %}readonly{% endif %}>{{ bio }}</textarea>
-    </div>
+      <h6 class="mt-4">荣誉：</h6>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="honor_umaleague_season_champ" id="honor1" {% if player.honor_umaleague_season_champ %}checked{% endif %} {% if not can_edit_honors %}disabled{% endif %}>
+        <label class="form-check-label" for="honor1">UMA League 赛季冠军</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="honor_umaleague_stage_champ" id="honor2" {% if player.honor_umaleague_stage_champ %}checked{% endif %} {% if not can_edit_honors %}disabled{% endif %}>
+        <label class="form-check-label" for="honor2">UMA League 赛段冠军</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="honor_loh96_hero" id="honor3" {% if player.honor_loh96_hero %}checked{% endif %} {% if not can_edit_honors %}disabled{% endif %}>
+        <label class="form-check-label" for="honor3">LOH96 杰</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="honor_aupl_champion" id="honor4" {% if player.honor_aupl_champion %}checked{% endif %} {% if not can_edit_honors %}disabled{% endif %}>
+        <label class="form-check-label" for="honor4">AUPL 冠军</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="honor_nxns_champion" id="honor5" {% if player.honor_nxns_champion %}checked{% endif %} {% if not can_edit_honors %}disabled{% endif %}>
+        <label class="form-check-label" for="honor5">NXNS 冠军</label>
+      </div>
+      
+      <div class="form-check form-switch mt-4">
+        <input class="form-check-input" type="checkbox" role="switch" name="public_results" id="public_results" {% if player.public_results %}checked{% endif %} {% if not can_edit_honors %}disabled{% endif %}>
+        <label class="form-check-label" for="public_results">允许他人查看我的历史战绩与总奖金</label>
+      </div>
 
-    <!-- 荣誉勾选 -->
-    <div class="form-row"><b>荣誉：</b></div>
-    <div class="form-row">
-      <label><input type="checkbox" name="honor_umaleague_season_champ"
-        {% if player.honor_umaleague_season_champ %}checked{% endif %}
-        {% if not can_edit_honors %}disabled{% endif %}>
-        UMA League 赛季冠军</label>
-    </div>
-    <div class="form-row">
-      <label><input type="checkbox" name="honor_umaleague_stage_champ"
-        {% if player.honor_umaleague_stage_champ %}checked{% endif %}
-        {% if not can_edit_honors %}disabled{% endif %}>
-        UMA League 赛段冠军</label>
-    </div>
-    <div class="form-row">
-      <label><input type="checkbox" name="honor_loh96_hero"
-        {% if player.honor_loh96_hero %}checked{% endif %}
-        {% if not can_edit_honors %}disabled{% endif %}>
-        LOH96 杰</label>
-    </div>
-    <div class="form-row">
-      <label><input type="checkbox" name="honor_aupl_champion"
-        {% if player.honor_aupl_champion %}checked{% endif %}
-        {% if not can_edit_honors %}disabled{% endif %}>
-        AUPL 冠军</label>
-    </div>
-    <div class="form-row">
-      <label><input type="checkbox" name="honor_nxns_champion"
-        {% if player.honor_nxns_champion %}checked{% endif %}
-        {% if not can_edit_honors %}disabled{% endif %}>
-        NXNS 冠军</label>
-    </div>
-
-    <!-- 可见性开关 -->
-    <div class="form-row">
-      <label><input type="checkbox" name="public_results"
-        {% if player.public_results %}checked{% endif %}
-        {% if not can_edit_honors %}disabled{% endif %}>
-        允许他人查看我的历史战绩与总奖金
-      </label>
-    </div>
-
-    {% if can_edit_honors %}
-      <div class="form-row"><button type="submit">保存</button></div>
-    {% else %}
-      <div class="form-row muted">（仅本人或管理员可编辑）</div>
-    {% endif %}
-  </form>
-
-  <!-- 已选荣誉徽章 -->
-  <div style="margin-top:8px;">
-    {% if player.honor_umaleague_season_champ %}<span class="badge">赛季冠军</span>{% endif %}
-    {% if player.honor_umaleague_stage_champ %}<span class="badge">赛段冠军</span>{% endif %}
-    {% if player.honor_loh96_hero %}<span class="badge">LOH96杰</span>{% endif %}
-    {% if player.honor_aupl_champion %}<span class="badge">AUPL冠军</span>{% endif %}
-    {% if player.honor_nxns_champion %}<span class="badge">NXNS冠军</span>{% endif %}
+      {% if can_edit_honors %}
+        <button type="submit" class="btn btn-primary mt-3">保存</button>
+      {% else %}
+        <p class="text-muted small mt-3">（仅本人或管理员可编辑）</p>
+      {% endif %}
+    </form>
   </div>
 </div>
 
 {% if can_view_private %}
-  <div class="card">
-    <h3>总奖金</h3>
-    <div><b>{{ payout_sum|floatformat:2 }}</b></div>
+  <div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">总奖金</h5>
+        <p class="card-text fs-4 fw-bold text-success">{{ payout_sum|floatformat:2 }}</p>
+    </div>
   </div>
 
   <div class="card">
-    <h3>历史战绩</h3>
-    {% if events_detail %}
-      {% for it in events_detail %}
-        <div style="margin-top:12px;"><b>{{ it.event.name }}</b></div>
-        <div class="muted">名次：{{ it.rank }} ｜ 累计积分：{{ it.total_score }}</div>
-        {% if it.rows %}
-          <table style="margin-top:8px;">
-            <thead>
-              <tr><th>轮次</th><th>组别</th><th>马#</th><th>名次</th></tr>
-            </thead>
-            <tbody>
-              {% for r in it.rows %}
-                <tr>
-                  <td>{{ r.round_no }}</td>
-                  <td>{{ r.group }}</td>
-                  <td>{{ r.horse_no }}</td>
-                  <td>{{ r.place }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        {% else %}
-          <div class="muted">（暂无每轮明细）</div>
-        {% endif %}
-      {% endfor %}
-    {% else %}
-      <div class="muted">（该选手暂无参赛记录）</div>
-    {% endif %}
+    <div class="card-body">
+      <h5 class="card-title">历史战绩</h5>
+      {% if events_detail %}
+        {% for it in events_detail %}
+          <div class="mb-4">
+            <h6>{{ it.event.name }}</h6>
+            <small class="text-muted">名次：{{ it.rank }} ｜ 累计积分：{{ it.total_score }}</small>
+            {% if it.rows %}
+              <table class="table table-sm table-bordered mt-2">
+                <thead>
+                  <tr><th>轮次</th><th>组别</th><th>马#</th><th>名次</th></tr>
+                </thead>
+                <tbody>
+                  {% for r in it.rows %}
+                    <tr>
+                      <td>{{ r.round_no }}</td>
+                      <td>{{ r.group }}</td>
+                      <td>{{ r.horse_no }}</td>
+                      <td>{{ r.place }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            {% else %}
+              <p class="text-muted small">（暂无每轮明细）</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% else %}
+        <p class="text-muted">（该选手暂无参赛记录）</p>
+      {% endif %}
+    </div>
   </div>
 {% else %}
   <div class="card">
-    <h3>总奖金 & 历史战绩</h3>
-    <div class="muted">（该选手已选择隐藏战绩）</div>
+    <div class="card-body">
+      <h5 class="card-title">总奖金 & 历史战绩</h5>
+      <p class="text-muted">（该选手已选择隐藏战绩）</p>
+    </div>
   </div>
 {% endif %}
 
-<p><a href="{% url 'players' %}">返回选手列表</a></p>
+<div class="mt-4">
+    <a href="{% url 'players' %}" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left"></i> 返回选手列表</a>
+</div>
 {% endblock %}

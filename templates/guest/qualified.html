@@ -1,17 +1,33 @@
-
 {% extends "guest/base.html" %}
+
+{% block title %}晋级名单 - Uma League{% endblock %}
+
 {% block content %}
-<h2>晋级名单</h2>
-<h3>赛段结算赛</h3>
-<ul>
-  {% for e in settlements %}
-    <li><a href="/event/{{ e.id }}/">{{ e.name }}</a></li>
-  {% endfor %}
-</ul>
-<h3>Season Final</h3>
-<ul>
-  {% for e in finals %}
-    <li><a href="/event/{{ e.id }}/">{{ e.name }}</a></li>
-  {% endfor %}
-</ul>
+<h2 class="mb-4">晋级名单</h2>
+
+<div class="card mb-4">
+    <div class="card-header fw-bold">
+        赛段结算赛
+    </div>
+    <div class="list-group list-group-flush">
+        {% for e in settlements %}
+            <a href="/event/{{ e.id }}/" class="list-group-item list-group-item-action">{{ e.name }}</a>
+        {% empty %}
+            <li class="list-group-item text-muted">暂无</li>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header fw-bold">
+        Season Final
+    </div>
+    <div class="list-group list-group-flush">
+        {% for e in finals %}
+            <a href="/event/{{ e.id }}/" class="list-group-item list-group-item-action">{{ e.name }}</a>
+        {% empty %}
+            <li class="list-group-item text-muted">暂无</li>
+        {% endfor %}
+    </div>
+</div>
 {% endblock %}

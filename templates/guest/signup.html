@@ -1,11 +1,25 @@
-
 {% extends "guest/base.html" %}
+
+{% block title %}注册 - Uma League{% endblock %}
+
 {% block content %}
-<h2>注册</h2>
-<form method="post">{% csrf_token %}
-  <label>用户名 <input name="username" required></label>
-  <label>密码 <input name="password" type="password" required></label>
-  <label>选手显示名 <input name="display_name" required></label>
-  <button type="submit">注册</button>
+<h2 class="text-center mb-4">注册</h2>
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="username" class="form-label">用户名</label>
+        <input name="username" id="username" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">密码</label>
+        <input name="password" id="password" type="password" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="display_name" class="form-label">选手显示名</label>
+        <input name="display_name" id="display_name" class="form-control" required>
+    </div>
+    <div class="d-grid">
+        <button type="submit" class="btn btn-primary">注册</button>
+    </div>
 </form>
 {% endblock %}

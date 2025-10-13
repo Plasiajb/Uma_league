@@ -24,7 +24,11 @@ def event_detail(request, event_id: int):
     event = get_object_or_404(Event, id=event_id)
     standings = Standing.objects.filter(event=event).order_by('rank')
     heats = Heat.objects.filter(event=event).order_by('round_no','group__name')
-    results = Result.objects.filter(heat__in=heats, is_npc=False).select_related('player','heat','heat__group')
+    
+    # *** 这是唯一的修改之处 ***
+    # 为查询结果添加了明确的排序，以确保前端的折叠列表能按轮次正确分组显示。
+    results = Result.objects.filter(heat__in=heats, is_npc=False).select_related('player','heat','heat__group').order_by('heat__round_no', 'heat__group__name', 'place')
+    
     gms = GroupMembership.objects.filter(event=event).order_by('round_no','group__name','player__name')
     published = PublishedRank.objects.filter(event=event).order_by('rank')
 

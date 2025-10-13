@@ -1,15 +1,22 @@
-
 {% extends "guest/base.html" %}
+
+{% block title %}我的资料 - Uma League{% endblock %}
+
 {% block content %}
-<h2>我的资料</h2>
+<h2 class="mb-4">我的资料</h2>
 {% if player %}
-<p>选手名：<strong>{{ player.name }}</strong></p>
-<form method="post">{% csrf_token %}
-  <label>自我介绍</label>
-  <textarea name="bio" rows="6">{{ player.bio }}</textarea>
-  <button type="submit">保存</button>
-</form>
+    <p>选手名：<strong class="fs-5">{{ player.name }}</strong></p>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="bio" class="form-label">自我介绍</label>
+            <textarea name="bio" id="bio" class="form-control" rows="6">{{ player.bio }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">保存</button>
+    </form>
 {% else %}
-<p>你还没有绑定选手名，请先 <a href="/signup/">注册</a>。</p>
+    <div class="alert alert-warning">
+        你还没有绑定选手名，请先 <a href="/signup/" class="alert-link">注册</a>。
+    </div>
 {% endif %}
 {% endblock %}

@@ -1,16 +1,25 @@
-
 {% extends "guest/base.html" %}
+
+{% block title %}当前赛段 - Uma League{% endblock %}
+
 {% block content %}
-  {% if stage %}
-    <h2>当前赛段</h2>
-    <p>赛季：{{ stage.season.name }} | 月份：{{ stage.month }} | 类型：{{ stage.get_type_display }} | 赛道：<strong>{{ stage.track_name }}</strong></p>
-    <h3>赛事列表</h3>
-    <ul>
-      {% for e in events %}
-        <li><a href="/event/{{ e.id }}/">{{ e.name }}（{{ e.get_format_display }}，轮数 {{ e.rounds }}）</a></li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>暂无赛段。</p>
-  {% endif %}
+    {% if stage %}
+        <h2 class="mb-3 border-bottom pb-2">当前赛段</h2>
+        <h5>赛季：{{ stage.season.name }} | 月份：{{ stage.month }} | 类型：{{ stage.get_type_display }}</h5>
+        <p class="lead">赛道：<strong>{{ stage.track_name }}</strong></p>
+        
+        <h3 class="mt-4">赛事列表</h3>
+        <div class="list-group">
+            {% for e in events %}
+                <a href="/event/{{ e.id }}/" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    {{ e.name }}
+                    <span class="badge bg-primary rounded-pill">{{ e.get_format_display }}，轮数 {{ e.rounds }}</span>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-warning" role="alert">
+            暂无赛段信息。
+        </div>
+    {% endif %}
 {% endblock %}

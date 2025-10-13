@@ -1,29 +1,21 @@
-
 {% extends "guest/base.html" %}
-{% block content %}
-<h2>登录</h2>
-<div class="grid">
-  <form method="post">{% csrf_token %}
-    <label>用户名 <input name="username" required></label>
-    <label>密码 <input name="password" type="password" required></label>
-    <button type="submit">登录</button>
-  </form>
-<aside class="promo">
-  <h3>赛事公告 / 推广</h3>
-  {% if promo_announcement %}
-    <p><strong>{{ promo_announcement.title }}</strong></p>
-    <div class="promo-body">
-      {{ promo_announcement.body|linebreaksbr|safe }}
-    </div>
-  {% else %}
-    <p><strong>种马群705992884</strong></p>
-    <ul>
-      <li>在线报名与房间号展示</li>
-      <li>自动积分与奖金分配</li>
-      <li>瑞士轮自动分组</li>
-    </ul>
-  {% endif %}
-</aside>
 
-</div>
+{% block title %}登录 - Uma League{% endblock %}
+
+{% block content %}
+<h2 class="text-center mb-4">登录</h2>
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="username" class="form-label">用户名</label>
+        <input name="username" id="username" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">密码</label>
+        <input name="password" id="password" type="password" class="form-control" required>
+    </div>
+    <div class="d-grid">
+        <button type="submit" class="btn btn-primary">登录</button>
+    </div>
+</form>
 {% endblock %}
