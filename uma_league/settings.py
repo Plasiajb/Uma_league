@@ -1,14 +1,25 @@
+# settings.py (完整替换)
+
 from pathlib import Path
 import os, dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY","dev-secret-key")
-DEBUG = os.getenv("DJANGO_DEBUG","true").lower()=="true"
+
+# --- 修改：智能判断 DEBUG 模式 ---
+# 只有在 Railway 上明确设置了 DJANGO_DEBUG=false 时，才关闭 DEBUG
+DEBUG = os.getenv("DJANGO_DEBUG", "true").lower() != "false"
+
 ALLOWED_HOSTS = ["*"]
 INSTALLED_APPS = [
     "django.contrib.admin","django.contrib.auth","django.contrib.contenttypes",
-    "django.contrib.sessions","django.contrib.messages","django.contrib.staticfiles",
+    "django.contrib.sessions","django.contrib.messages",
+    
+    # --- 修改：将 staticfiles 移到 cloudinary 前面 ---
+    "django.contrib.staticfiles", 
+    "cloudinary_storage",  # +++ 新增
     "turf",
+    "cloudinary",          # +++ 新增
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -37,27 +48,37 @@ DATABASES = {"default":{"ENGINE":"django.db.backends.sqlite3","NAME":BASE_DIR/"d
 if os.getenv("DATABASE_URL"):
     DATABASES["default"] = dj_database_url.parse(os.environ["DATABASE_URL"], conn_max_age=600, ssl_require=False)
 LANGUAGE_CODE="zh-hans"; TIME_ZONE="Europe/Stockholm"; USE_I18N=True; USE_TZ=True
-STATIC_URL="/static/"; STATIC_ROOT=BASE_DIR/"staticfiles"; STATICFILES_DIRS=[BASE_DIR/"static"]
+
 DEFAULT_AUTO_FIELD="django.db.models.BigAutoField"
 
-import os
+# --- 静态文件 (Static) 和媒体文件 (Media) 配置 ---
 
-# 反向代理下让 Django 识别 HTTPS（Railway/Nginx 常用）
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-
-# 从环境变量读取可信域名，逗号分隔，必须带协议（https://）
-_raw = os.getenv("CSRF_TRUSTED_ORIGINS", "")
-CSRF_TRUSTED_ORIGINS = [x.strip() for x in _raw.split(",") if x.strip()]
-
-# WhiteNoise 已经在 MIDDLEWARE 里（在 SecurityMiddleware 之后）
+# 静态文件 (由开发者提供，随代码部署)
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_DIRS = [BASE_DIR / "static"]  # 目录可以为空，别删
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
-# 先用最保险的存储，避免 manifest 缺失直接 500
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
-
-
-# +++ 新增：媒体文件（用户上传文件）配置 +++
+# 媒体文件 (由用户上传，动态内容)
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+
+# --- 修改：智能判断使用哪个存储后端 ---
+# 如果 CLOUDINARY_URL 环境变量存在 (通常只在线上环境设置)
+if 'CLOUDINARY_URL' in os.environ:
+    # 生产环境：使用 Cloudinary
+    MEDIA_ROOT = BASE_DIR / 'media' # 这一行可以保留，虽然文件不会存在这里
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+        'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+        'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+    }
+else:
+    # 本地开发环境：使用本地文件系统
+    MEDIA_ROOT = BASE_DIR / 'media'
+
+
+# --- 其他生产环境配置 ---
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+_raw = os.getenv("CSRF_TRUSTED_ORIGINS", "")
+CSRF_TRUSTED_ORIGINS = [x.strip() for x in _raw.split(",") if x.strip()]
+STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
