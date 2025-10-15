@@ -1,6 +1,6 @@
-
 from pathlib import Path
 import os, dj_database_url
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY","dev-secret-key")
 DEBUG = os.getenv("DJANGO_DEBUG","true").lower()=="true"
@@ -57,3 +57,7 @@ STATICFILES_DIRS = [BASE_DIR / "static"]  # 目录可以为空，别删
 # 先用最保险的存储，避免 manifest 缺失直接 500
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
+
+# +++ 新增：媒体文件（用户上传文件）配置 +++
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
