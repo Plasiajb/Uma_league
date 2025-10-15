@@ -1,12 +1,10 @@
-# settings.py (完整替换)
-
 from pathlib import Path
 import os, dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY","dev-secret-key")
 
-# --- 修改：智能判断 DEBUG 模式 ---
+# --- 智能判断 DEBUG 模式 ---
 # 只有在 Railway 上明确设置了 DJANGO_DEBUG=false 时，才关闭 DEBUG
 DEBUG = os.getenv("DJANGO_DEBUG", "true").lower() != "false"
 
@@ -14,12 +12,10 @@ ALLOWED_HOSTS = ["*"]
 INSTALLED_APPS = [
     "django.contrib.admin","django.contrib.auth","django.contrib.contenttypes",
     "django.contrib.sessions","django.contrib.messages",
-    
-    # --- 修改：将 staticfiles 移到 cloudinary 前面 ---
     "django.contrib.staticfiles", 
-    "cloudinary_storage",  # +++ 新增
+    "cloudinary_storage",
     "turf",
-    "cloudinary",          # +++ 新增
+    "cloudinary",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -51,27 +47,25 @@ LANGUAGE_CODE="zh-hans"; TIME_ZONE="Europe/Stockholm"; USE_I18N=True; USE_TZ=Tru
 
 DEFAULT_AUTO_FIELD="django.db.models.BigAutoField"
 
-# --- 静态文件 (Static) 和媒体文件 (Media) 配置 ---
+
+# --- 静态文件 (Static) 和媒体文件 (Media) 的简化配置 ---
 
 # 静态文件 (由开发者提供，随代码部署)
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+# 推荐使用 WhiteNoise 的专用存储后端，性能更好
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # 媒体文件 (由用户上传，动态内容)
 MEDIA_URL = '/media/'
 
-# --- 修改：智能判断使用哪个存储后端 ---
-# 如果 CLOUDINARY_URL 环境变量存在 (通常只在线上环境设置)
+# --- 智能判断使用哪个存储后端 (更简洁的版本) ---
+# 如果 CLOUDINARY_URL 环境变量存在 (即在线上环境)
 if 'CLOUDINARY_URL' in os.environ:
     # 生产环境：使用 Cloudinary
-    MEDIA_ROOT = BASE_DIR / 'media' # 这一行可以保留，虽然文件不会存在这里
+    # django-cloudinary-storage 会自动从环境变量中读取所有密钥，无需额外配置
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    CLOUDINARY_STORAGE = {
-        'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
-        'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
-        'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
-    }
 else:
     # 本地开发环境：使用本地文件系统
     MEDIA_ROOT = BASE_DIR / 'media'
@@ -81,4 +75,3 @@ else:
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 _raw = os.getenv("CSRF_TRUSTED_ORIGINS", "")
 CSRF_TRUSTED_ORIGINS = [x.strip() for x in _raw.split(",") if x.strip()]
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
