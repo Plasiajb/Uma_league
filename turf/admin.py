@@ -1,3 +1,5 @@
+# admin.py (已整合新模型)
+
 from django.contrib import admin, messages
 from django.db import models
 from django.db.models import Q
@@ -8,7 +10,8 @@ from .models import Event, GroupMembership, Heat, Result, SelfReport
 
 from .models import (
     Player, Season, Stage, Event, Group, Enrollment, Heat, Result,
-    Standing, Payout, GroupMembership, PublishedRank, Announcement, SelfReport
+    Standing, Payout, GroupMembership, PublishedRank, Announcement, SelfReport,
+    PastEvent, PastChampion  # <--- 在此导入新模型
 )
 from .utils import recompute_standings, compute_payouts_for_event, seed_round1, pair_next_round
 
@@ -16,7 +19,7 @@ from .utils import recompute_standings, compute_payouts_for_event, seed_round1, 
 # 基础模型注册
 # =========================
 
-# 在 PlayerAdmin 里扩展展示/筛选
+# ... 您已有的 PlayerAdmin, SeasonAdmin, StageAdmin 等代码保持不变 ...
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
     search_fields = ["name","user__username"]
@@ -38,8 +41,9 @@ class StageAdmin(admin.ModelAdmin):
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     list_display = ["id","name","stage","format","rounds","group_count"]
+    search_fields = ["name"]  # <--- ADD THIS LINE
     actions = ["action_recompute_standings", "action_compute_payouts", "action_seed_round1", "action_pair_next"]
-
+    # ... rest of your EventAdmin methods ...    # ... EventAdmin 的其他代码不变 ...
     @admin.action(description="Recompute standings from results")
     def action_recompute_standings(self, request, queryset):
         for event in queryset:
@@ -68,10 +72,12 @@ class EventAdmin(admin.ModelAdmin):
             cnt += pair_next_round(e) or 0
         self.message_user(request, f"已为所选赛事生成下一轮分组/Heat（总计 {cnt} 名选手）。")
 
+
 @admin.register(Group)
 class GroupAdmin(admin.ModelAdmin):
     list_display = ["id","event","name"]
 
+# ... 您其他的 Admin 注册代码保持不变 ...
 @admin.register(Enrollment)
 class EnrollmentAdmin(admin.ModelAdmin):
     list_display = ["id","event","player","status"]
@@ -124,10 +130,27 @@ class AnnouncementAdmin(admin.ModelAdmin):
     def deactivate(self, request, queryset):
         queryset.update(is_active=False)
 
+
+# +++ 新增：历届回顾后台管理 +++
+@admin.register(PastEvent)
+class PastEventAdmin(admin.ModelAdmin):
+    list_display = ('title', 'event_date', 'original_event')
+    search_fields = ('title',)
+    list_filter = ('event_date',)
+    autocomplete_fields = ['original_event']
+
+@admin.register(PastChampion)
+class PastChampionAdmin(admin.ModelAdmin):
+    list_display = ('player', 'past_event', 'gdoc_url')
+    search_fields = ('player__name', 'past_event__title')
+    autocomplete_fields = ['player', 'past_event']
+# +++ 新增结束 +++
+
+
 # =========================
 #   前哨战：熵最大分组
 # =========================
-
+# ... 您后续的 action_seed_vanguard_entropy, approve_reports 等代码保持不变 ...
 # 固定分组表（5轮 × 3组 × 12人）
 VANGUARD_ENTROPY_SCHEDULE = {
     1: {"A": [1,2,3,4,13,14,15,16,25,26,27,28],
@@ -257,4 +280,3 @@ class SelfReportAdmin(admin.ModelAdmin):
     list_filter = ("event","verified")
     search_fields = ("player__name",)
     actions = [approve_reports]
-

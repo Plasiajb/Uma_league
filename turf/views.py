@@ -8,16 +8,15 @@ from django.contrib.auth.models import User
 
 from .models import (
     Season, Stage, Event, Group, Heat, Result, Standing, Payout,
-    Player, Enrollment, GroupMembership, PublishedRank, SelfReport
+    Player, Enrollment, GroupMembership, PublishedRank, SelfReport,
+    PastEvent, PastChampion  # <-- 导入新模型
 )
 
-# +++ 新增的视图函数 +++
 def landing_page(request):
     """
     渲染独立的入口/登陆页面。
     """
     return render(request, "guest/landing.html")
-# +++ 新增结束 +++
 
 
 def current_stage():
@@ -26,7 +25,17 @@ def current_stage():
 def home(request):
     stage = current_stage()
     events = Event.objects.filter(stage=stage) if stage else []
-    ctx = {"stage": stage, "events": events}
+    
+    # +++ 新增：获取最近的历届冠军和赛事用于滚动组件 +++
+    recent_champions = PastChampion.objects.select_related('player', 'past_event').all()[:10] # 获取最近10个
+    recent_events = PastEvent.objects.all()[:10]     # 获取最近10个
+    
+    ctx = {
+        "stage": stage, 
+        "events": events,
+        "recent_champions": recent_champions, # <--- 传递到模板
+        "recent_events": recent_events,       # <--- 传递到模板
+    }
     return render(request, "guest/home.html", ctx)
 
 def event_detail(request, event_id: int):
@@ -268,3 +277,43 @@ def player_profile(request, player_id: int):
         "can_view_private": can_view_private,
     }
     return render(request, "guest/player_profile.html", ctx)
+
+# +++ 新增：历届回顾的视图函数 +++
+def past_events_list(request):
+    """历届赛事列表页"""
+    all_events = PastEvent.objects.all()
+    return render(request, "guest/past_events_list.html", {"events": all_events})
+
+def past_event_detail(request, pk: int):
+    """历届赛事详情页"""
+    event = get_object_or_404(PastEvent, pk=pk)
+    # 尝试获取关联的冠军信息
+    champion = PastChampion.objects.filter(past_event=event).first()
+    return render(request, "guest/past_event_detail.html", {"event": event, "champion": champion})
+
+def past_champions_list(request):
+    """历届冠军列表页"""
+    all_champions = PastChampion.objects.select_related('player', 'past_event').all()
+    return render(request, "guest/past_champions_list.html", {"champions": all_champions})
+
+def past_champion_detail(request, pk: int):
+    """历届冠军详情页"""
+    champion = get_object_or_404(PastChampion.objects.select_related('player', 'past_event'), pk=pk)
+    
+    # 获取该选手在该赛事的积分情况
+    event_details = {}
+    original_event = champion.past_event.original_event if champion.past_event else None
+    if original_event:
+        standing = Standing.objects.filter(player=champion.player, event=original_event).first()
+        if standing:
+            event_details = {
+                "event": original_event,
+                "rank": standing.rank,
+                "total_score": standing.total_score,
+            }
+
+    return render(request, "guest/past_champion_detail.html", {
+        "champion": champion,
+        "event_details": event_details
+    })
+# +++ 新增结束 +++

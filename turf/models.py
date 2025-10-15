@@ -158,3 +158,39 @@ class SelfReport(models.Model):
         unique_together = ("event", "player", "round_no", "horse_index")
     def __str__(self):
         return f"{self.event} / {self.player} / R{self.round_no} H{self.horse_index} = {self.place}"
+
+# MIGRATION: 0_past_events_champions
+# 在 models.py 文件末尾添加以下内容
+
+class PastEvent(models.Model):
+    title = models.CharField(max_length=100, verbose_name="赛事标题")
+    poster = models.ImageField(upload_to='posters/events/', blank=True, null=True, verbose_name="赛事海报")
+    description = models.TextField(verbose_name="赛事简介")
+    event_date = models.DateField(verbose_name="赛事日期")
+    # 关联到系统内原有的赛事，方便跳转
+    original_event = models.ForeignKey(Event, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="关联的系统赛事")
+    
+    class Meta:
+        ordering = ["-event_date"] # 按赛事日期降序排列
+        verbose_name = "历届赛事"
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.title
+
+class PastChampion(models.Model):
+    # 关联到对应的历届赛事
+    past_event = models.OneToOneField(PastEvent, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="关联的历届赛事")
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, verbose_name="冠军选手")
+    poster = models.ImageField(upload_to='posters/champions/', blank=True, null=True, verbose_name="夺冠海报")
+    testimonial = models.TextField(verbose_name="夺冠感言")
+    gdoc_url = models.URLField(max_length=1024, blank=True, default="", verbose_name="冠军战马Google文档链接")
+    
+    class Meta:
+        # 通过关联的赛事日期进行排序
+        ordering = ["-past_event__event_date"]
+        verbose_name = "历届冠军"
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return f"{self.past_event.title} - {self.player.name}"

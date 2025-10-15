@@ -8,6 +8,13 @@ urlpatterns = [
     # 修改：原主页移动到 /league/ 路径，但 name 保持为 "home" 以便其他链接正常工作
     path("league/", views.home, name="home"),
     
+    # +++ 新增：历届回顾的 URL 路径 +++
+    path("history/events/", views.past_events_list, name="past_events_list"),
+    path("history/events/<int:pk>/", views.past_event_detail, name="past_event_detail"),
+    path("history/champions/", views.past_champions_list, name="past_champions_list"),
+    path("history/champions/<int:pk>/", views.past_champion_detail, name="past_champion_detail"),
+    # +++ 新增结束 +++
+    
     path("event/<int:event_id>/", views.event_detail, name="event_detail"),
     path("players/", views.players, name="players"),
     path("players/<int:player_id>/", views.player_profile, name="player_profile"),

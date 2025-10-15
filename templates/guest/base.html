@@ -23,6 +23,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">当前赛段</a></li>
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            历史回顾
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'past_champions_list' %}">历届冠军</a></li>
+                            <li><a class="dropdown-item" href="{% url 'past_events_list' %}">历届赛事</a></li>
+                        </ul>
+                    </li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'players' %}">选手战绩</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'qualified' %}">晋级名单</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'payouts' %}">奖金</a></li>

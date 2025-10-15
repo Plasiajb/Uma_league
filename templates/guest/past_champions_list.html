@@ -1,0 +1,24 @@
+{% extends "guest/base.html" %}
+{% block title %}历届冠军 - Uma League{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">历届冠军</h2>
+<div class="row row-cols-1 row-cols-md-3 g-4">
+  {% for champ in champions %}
+  <div class="col">
+    <a href="{% url 'past_champion_detail' champ.pk %}" class="text-decoration-none">
+      <div class="card h-100">
+        <img src="{{ champ.poster.url | default:'/static/images/no-image.png' }}" class="card-img-top" alt="{{ champ.player.name }}">
+        <div class="card-body">
+          <h5 class="card-title">{{ champ.player.name }}</h5>
+          <p class="card-text">{{ champ.past_event.title }}</p>
+          <p class="card-text"><small class="text-muted">{{ champ.past_event.event_date|date:"Y年n月j日" }}</small></p>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% empty %}
+  <p class="text-muted">暂无历史冠军记录。</p>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "guest/base.html" %}
+{% block title %}{{ event.title }} - 历届赛事{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-md-5">
+    <img src="{{ event.poster.url | default:'/static/images/no-image.png' }}" class="img-fluid rounded" alt="{{ event.title }}">
+  </div>
+  <div class="col-md-7">
+    <h2 class="mb-3">{{ event.title }}</h2>
+    <p class="text-muted"><strong>赛事日期:</strong> {{ event.event_date|date:"Y年n月j日" }}</p>
+    <hr>
+    <h5>赛事简介</h5>
+    <p>{{ event.description|linebreaks }}</p>
+    <hr>
+    {% if event.original_event %}
+      <a href="{% url 'event_detail' event.original_event.id %}" class="btn btn-primary">查看赛事详情页</a>
+    {% endif %}
+    {% if champion %}
+      <a href="{% url 'past_champion_detail' champion.pk %}" class="btn btn-outline-warning ms-2">查看本届冠军</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'past_events_list' %}" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left"></i> 返回赛事列表</a>
+</div>
+{% endblock %}

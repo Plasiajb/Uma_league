@@ -1,0 +1,40 @@
+{% extends "guest/base.html" %}
+{% block title %}{{ champion.player.name }} - 历届冠军{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-md-5">
+    <img src="{{ champion.poster.url | default:'/static/images/no-image.png' }}" class="img-fluid rounded" alt="{{ champion.player.name }}">
+  </div>
+  <div class="col-md-7">
+    <h2 class="mb-1">{{ champion.player.name }}</h2>
+    <p class="text-muted"><strong>{{ champion.past_event.title }} 冠军</strong></p>
+    <hr>
+    <h5>夺冠感言</h5>
+    <blockquote class="blockquote">
+      <p>{{ champion.testimonial|linebreaks }}</p>
+    </blockquote>
+    <hr>
+    {% if champion.gdoc_url %}
+      <a href="{{ champion.gdoc_url }}" class="btn btn-success" target="_blank" rel="noopener noreferrer">冠军战马链接</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if event_details %}
+<div class="card mt-4">
+  <div class="card-header">
+    <strong>本场赛事积分情况</strong>
+  </div>
+  <div class="card-body">
+    <p><strong>赛事:</strong> <a href="{% url 'event_detail' event_details.event.id %}">{{ event_details.event.name }}</a></p>
+    <p><strong>名次:</strong> {{ event_details.rank }}</p>
+    <p><strong>累计积分:</strong> {{ event_details.total_score }}</p>
+  </div>
+</div>
+{% endif %}
+
+<div class="mt-4">
+    <a href="{% url 'past_champions_list' %}" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left"></i> 返回冠军列表</a>
+</div>
+{% endblock %}

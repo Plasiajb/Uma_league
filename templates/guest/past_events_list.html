@@ -1,0 +1,23 @@
+{% extends "guest/base.html" %}
+{% block title %}历届赛事 - Uma League{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">历届赛事</h2>
+<div class="row row-cols-1 row-cols-md-3 g-4">
+  {% for event in events %}
+  <div class="col">
+    <a href="{% url 'past_event_detail' event.pk %}" class="text-decoration-none">
+      <div class="card h-100">
+        <img src="{{ event.poster.url | default:'/static/images/no-image.png' }}" class="card-img-top" alt="{{ event.title }}">
+        <div class="card-body">
+          <h5 class="card-title">{{ event.title }}</h5>
+          <p class="card-text"><small class="text-muted">{{ event.event_date|date:"Y年n月j日" }}</small></p>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% empty %}
+  <p class="text-muted">暂无历史赛事记录。</p>
+  {% endfor %}
+</div>
+{% endblock %}
