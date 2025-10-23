@@ -94,13 +94,14 @@
                 {% if active_ads %}
                 <div class="card promo-card my-3">
                     <div class="card-header">
-                        <h5 class="mb-0">宣传 / PROMO</h5>
+                        <h5 class="mb-0">宣传/实用工具推荐</h5>
                     </div>
                     <div class="card-body">
                         <div class="row g-2">
                             {% for ad in active_ads %}
                             <div class="col-6 col-lg-12">
                                 <a href="{{ ad.url|default:'#' }}" target="_blank" rel="noopener noreferrer" class="promo-ad-link">
+                                    <h6 class="promo-ad-title">{{ ad.title }}</h6>
                                     <img src="{{ ad.poster.url }}" alt="{{ ad.title }}" class="img-fluid rounded promo-ad-poster">
                                 </a>
                             </div>
@@ -130,7 +131,22 @@
         .promo-ad-link {
             display: block; /* 确保链接填满栅格单元 */
             margin-bottom: 0.5rem; /* 多个海报之间的间距 */
+            text-decoration: none; /* 3. 移除链接下划线 */
         }
+        
+        /* 3. 为新添加的标题添加样式 */
+        .promo-ad-title {
+            font-size: 0.9rem;
+            font-weight: 600; /* 稍粗的字体 */
+            color: #343a40; /* 深灰色 */
+            margin-bottom: 0.25rem; /* 标题和图片间的小间距 */
+            transition: color 0.2s ease;
+        }
+        /* 鼠标悬浮时让标题也变色 */
+        .promo-ad-link:hover .promo-ad-title {
+            color: #0d6efd; /* Bootstrap 默认蓝色 */
+        }
+
         /* 确保在移动端时，最后一个广告下方也有间距 */
         .promo-ad-link:last-child {
             margin-bottom: 0;
