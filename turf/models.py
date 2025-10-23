@@ -194,3 +194,23 @@ class PastChampion(models.Model):
 
     def __str__(self):
         return f"{self.past_event.title} - {self.player.name}"
+
+# =========================
+#   v v v 新增：宣传/广告模型 v v v
+# =========================
+class PromoAd(models.Model):
+    title = models.CharField(max_length=100, verbose_name="广告标题")
+    poster = models.ImageField(upload_to='posters/ads/', verbose_name="宣传海报")
+    url = models.URLField(max_length=1024, blank=True, default="", verbose_name="广告链接")
+    is_active = models.BooleanField(default=True, verbose_name="是否启用")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "宣传广告"
+        verbose_name_plural = verbose_name
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.title
+# ^^^^^ 新增结束 ^^^^^

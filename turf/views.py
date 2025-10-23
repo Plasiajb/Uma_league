@@ -9,7 +9,8 @@ from django.contrib.auth.models import User
 from .models import (
     Season, Stage, Event, Group, Heat, Result, Standing, Payout,
     Player, Enrollment, GroupMembership, PublishedRank, SelfReport,
-    PastEvent, PastChampion  # <-- 导入新模型
+    PastEvent, PastChampion,
+    PromoAd  # <-- 导入新模型
 )
 
 def landing_page(request):
@@ -30,11 +31,15 @@ def home(request):
     recent_champions = PastChampion.objects.select_related('player', 'past_event').all()[:10] # 获取最近10个
     recent_events = PastEvent.objects.all()[:10]     # 获取最近10个
     
+    # +++ 随机获取所有启用的广告 +++
+    active_ads = list(PromoAd.objects.filter(is_active=True).order_by('?'))
+    
     ctx = {
         "stage": stage, 
         "events": events,
         "recent_champions": recent_champions, # <--- 传递到模板
         "recent_events": recent_events,       # <--- 传递到模板
+        "active_ads": active_ads,          # <--- 传递到模板
     }
     return render(request, "guest/home.html", ctx)
 

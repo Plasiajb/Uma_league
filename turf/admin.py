@@ -11,7 +11,8 @@ from .models import Event, GroupMembership, Heat, Result, SelfReport
 from .models import (
     Player, Season, Stage, Event, Group, Enrollment, Heat, Result,
     Standing, Payout, GroupMembership, PublishedRank, Announcement, SelfReport,
-    PastEvent, PastChampion  # <--- 在此导入新模型
+    PastEvent, PastChampion,
+    PromoAd  # <--- 在此导入新模型
 )
 # vvvvv  在这里添加新的 import vvvvv
 from .utils import (
@@ -180,6 +181,29 @@ class PastChampionAdmin(admin.ModelAdmin):
 # +++ 新增结束 +++
 
 
+# vvvvv  在这里添加新的 Admin vvvvv
+# =========================
+#   新增：宣传广告管理
+# =========================
+@admin.register(PromoAd)
+class PromoAdAdmin(admin.ModelAdmin):
+    list_display = ('title', 'is_active', 'url', 'created_at')
+    list_filter = ('is_active',)
+    search_fields = ('title',)
+    actions = ['activate_ads', 'deactivate_ads']
+
+    @admin.action(description="启用所选广告")
+    def activate_ads(self, request, queryset):
+        queryset.update(is_active=True)
+        self.message_user(request, "已启用所选广告。")
+
+    @admin.action(description="停用所选广告")
+    def deactivate_ads(self, request, queryset):
+        queryset.update(is_active=False)
+        self.message_user(request, "已停用所选广告。")
+# ^^^^^  新增结束 ^^^^^
+
+
 # =========================
 #   前哨战：熵最大分组
 # =========================
@@ -197,7 +221,7 @@ VANGUARD_ENTROPY_SCHEDULE = {
         "C": [1.2,11,12,19,20,21,22,27,28,29,30]},
     4: {"A": [4,5,6,7,16,17,18,19,25,26,27,36],
         "B": [8,9,10,11,20,21,22,23,28,29,30,31],
-        "C": [1,2,3,12,13,14,15,24,32,33,34,35]},
+        "C": [1_2,3,12,13,14,15,24,32,33,34,35]},
     5: {"A": [5,6,7,8,21,22,23,24,33,34,35,36],
         "B": [9,10,11,12,13,14,15,16,25,26,27,28],
         "C": [1,2,3,4,17,18,19,20,29,30,31,32]},
