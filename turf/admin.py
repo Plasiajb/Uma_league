@@ -1,4 +1,4 @@
-# admin.py (已整合新模型)
+# turf/admin.py
 
 from django.contrib import admin, messages
 from django.db import models
@@ -13,7 +13,11 @@ from .models import (
     Standing, Payout, GroupMembership, PublishedRank, Announcement, SelfReport,
     PastEvent, PastChampion  # <--- 在此导入新模型
 )
-from .utils import recompute_standings, compute_payouts_for_event, seed_round1, pair_next_round
+# vvvvv  在这里添加新的 import vvvvv
+from .utils import (
+    recompute_standings, compute_payouts_for_event, seed_round1, pair_next_round,
+    seed_vanguard_random_per_round
+)
 
 # =========================
 # 基础模型注册
@@ -41,8 +45,15 @@ class StageAdmin(admin.ModelAdmin):
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     list_display = ["id","name","stage","format","rounds","group_count"]
-    search_fields = ["name"]  # <--- ADD THIS LINE
-    actions = ["action_recompute_standings", "action_compute_payouts", "action_seed_round1", "action_pair_next"]
+    search_fields = ["name"]
+    # vvvvv  在这里添加新的 action name vvvvv
+    actions = [
+        "action_recompute_standings",
+        "action_compute_payouts",
+        "action_seed_round1",
+        "action_pair_next",
+        "action_seed_vanguard_random" # <-- 新增
+    ]
     # ... rest of your EventAdmin methods ...    # ... EventAdmin 的其他代码不变 ...
     @admin.action(description="Recompute standings from results")
     def action_recompute_standings(self, request, queryset):
@@ -69,8 +80,30 @@ class EventAdmin(admin.ModelAdmin):
     def action_pair_next(self, request, queryset):
         cnt = 0
         for e in queryset:
-            cnt += pair_next_round(e) or 0
-        self.message_user(request, f"已为所选赛事生成下一轮分组/Heat（总计 {cnt} 名选手）。")
+            try:
+                cnt += pair_next_round(e) or 0
+                self.message_user(request, f"[{e.name}] 已生成下一轮分组（总计 {cnt} 名选手）。")
+            except Exception as ex:
+                self.message_user(request, f"[{e.name}] 分组失败：{ex}", level=messages.ERROR)
+
+
+    # vvvvv  在这里添加新的 action method vvvvv
+    @admin.action(description="前哨战：每轮纯随机分组 (任意人数)")
+    def action_seed_vanguard_random(self, request, queryset):
+        events_processed = 0
+        try:
+            for e in queryset:
+                total_rounds = e.rounds
+                player_count = seed_vanguard_random_per_round(e)
+                events_processed += 1
+                self.message_user(request, f"[{e.name}] 已生成 {total_rounds} 轮纯随机分组（总计 {player_count} 名选手）。")
+            
+            if events_processed > 1:
+                self.message_user(request, f"总计 {events_processed} 个赛事处理完毕。")
+
+        except Exception as ex:
+            self.message_user(request, f"分组失败：{ex}", level=messages.ERROR)
+    # ^^^^^  新增结束 ^^^^^
 
 
 @admin.register(Group)
@@ -161,7 +194,7 @@ VANGUARD_ENTROPY_SCHEDULE = {
         "C": [1,10,11,12,14,15,16,17,30,31,32,33]},
     3: {"A": [3,4,5,6,13,14,23,24,31,32,33,34],
         "B": [7,8,9,10,15,16,17,18,25,26,35,36],
-        "C": [1,2,11,12,19,20,21,22,27,28,29,30]},
+        "C": [1.2,11,12,19,20,21,22,27,28,29,30]},
     4: {"A": [4,5,6,7,16,17,18,19,25,26,27,36],
         "B": [8,9,10,11,20,21,22,23,28,29,30,31],
         "C": [1,2,3,12,13,14,15,24,32,33,34,35]},
