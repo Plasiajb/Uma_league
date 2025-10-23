@@ -1,3 +1,5 @@
+# turf/views.py
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Sum, Count
 from django.db.models.functions import Lower
@@ -10,7 +12,7 @@ from .models import (
     Season, Stage, Event, Group, Heat, Result, Standing, Payout,
     Player, Enrollment, GroupMembership, PublishedRank, SelfReport,
     PastEvent, PastChampion,
-    PromoAd  # <-- 导入新模型
+    PromoAd  # <-- 1. 导入 PromoAd 
 )
 
 def landing_page(request):
@@ -31,18 +33,20 @@ def home(request):
     recent_champions = PastChampion.objects.select_related('player', 'past_event').all()[:10] # 获取最近10个
     recent_events = PastEvent.objects.all()[:10]     # 获取最近10个
     
-    # +++ 随机获取所有启用的广告 +++
-    active_ads = list(PromoAd.objects.filter(is_active=True).order_by('?'))
+    # vvvvv 2. 已删除 active_ads 查询（contexts.py 已处理） vvvvv
+    # active_ads = list(PromoAd.objects.filter(is_active=True).order_by('?'))
+    # ^^^^^ 删除结束 ^^^^^
     
     ctx = {
         "stage": stage, 
         "events": events,
         "recent_champions": recent_champions, # <--- 传递到模板
         "recent_events": recent_events,       # <--- 传递到模板
-        "active_ads": active_ads,          # <--- 传递到模板
+        # "active_ads": active_ads,          # <-- 3. 已从 context 中移除
     }
     return render(request, "guest/home.html", ctx)
 
+# ... (从 event_detail 到文件末尾的所有其他视图函数保持不变) ...
 def event_detail(request, event_id: int):
     event = get_object_or_404(Event, id=event_id)
     standings = Standing.objects.filter(event=event).order_by('rank')

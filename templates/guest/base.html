@@ -90,10 +90,57 @@
                         {% endif %}
                     </div>
                 </div>
-            </div>
+
+                {% if active_ads %}
+                <div class="card promo-card my-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">宣传 / PROMO</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-2">
+                            {% for ad in active_ads %}
+                            <div class="col-6 col-lg-12">
+                                <a href="{{ ad.url|default:'#' }}" target="_blank" rel="noopener noreferrer" class="promo-ad-link">
+                                    <img src="{{ ad.poster.url }}" alt="{{ ad.title }}" class="img-fluid rounded promo-ad-poster">
+                                </a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                </div>
         </div>
     </main>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+
+    <style>
+        .promo-ad-poster {
+            width: 100%;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            border: 1px solid #eee;
+        }
+        .promo-ad-poster:hover {
+            transform: scale(1.05); /* 鼠标悬浮时放大 5% */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10;
+            position: relative; /* 确保放大时不会被遮挡 */
+        }
+        .promo-ad-link {
+            display: block; /* 确保链接填满栅格单元 */
+            margin-bottom: 0.5rem; /* 多个海报之间的间距 */
+        }
+        /* 确保在移动端时，最后一个广告下方也有间距 */
+        .promo-ad-link:last-child {
+            margin-bottom: 0;
+        }
+        /* 在 lg 屏幕及以上，恢复间距 */
+        @media (min-width: 992px) {
+            .promo-ad-link {
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+    </body>
 </html>
