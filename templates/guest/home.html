@@ -3,129 +3,72 @@
 {% block title %}当前赛段 - Uma League{% endblock %}
 
 {% block content %}
-<div class="row">
-    
-    <div class="col-md-8">
-        {% if stage %}
-            <h2 class="mb-3 border-bottom pb-2">当前赛段</h2>
-            <h5>赛季：{{ stage.season.name }} | 月份：{{ stage.month }} | 类型：{{ stage.get_type_display }}</h5>
-            <p class="lead">赛道：<strong>{{ stage.track_name }}</strong></p>
-            
-            <h3 class="mt-4">赛事列表</h3>
-            <div class="list-group">
-                {% for e in events %}
-                    <a href="/event/{{ e.id }}/" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                        {{ e.name }}
-                        <span class="badge bg-primary rounded-pill">{{ e.get_format_display }}，轮数 {{ e.rounds }}</span>
-                    </a>
-                {% empty %}
-                    <p class="text-muted">当前赛段暂无赛事。</p>
+    {% if stage %}
+        <h2 class="mb-3 border-bottom pb-2">当前赛段</h2>
+        <h5>赛季：{{ stage.season.name }} | 月份：{{ stage.month }} | 类型：{{ stage.get_type_display }}</h5>
+        <p class="lead">赛道：<strong>{{ stage.track_name }}</strong></p>
+        
+        <h3 class="mt-4">赛事列表</h3>
+        <div class="list-group">
+            {% for e in events %}
+                <a href="/event/{{ e.id }}/" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    {{ e.name }}
+                    <span class="badge bg-primary rounded-pill">{{ e.get_format_display }}，轮数 {{ e.rounds }}</span>
+                </a>
+            {% empty %}
+                <p class="text-muted">当前赛段暂无赛事。</p>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-warning" role="alert">
+            暂无赛段信息。
+        </div>
+    {% endif %}
+
+    {% if recent_champions or recent_events %}
+    <div class="history-recap mt-5">
+        <h3 class="mb-4 text-center border-top pt-4">历史回顾</h3>
+
+        {% if recent_champions %}
+        <div class="recap-section">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="recap-title">历届冠军</h5>
+                <a href="{% url 'past_champions_list' %}" class="btn btn-sm btn-outline-secondary">查看全部 &raquo;</a>
+            </div>
+            <div class="scroll-container">
+                {% for champion in recent_champions %}
+                <a href="{% url 'past_champion_detail' champion.pk %}" class="recap-card">
+                    <img src="{% if champion.poster %}{{ champion.poster.url }}{% else %}/static/images/no-image.png{% endif %}" alt="{{ champion.player.name }}">
+                    <div class="recap-card-body">
+                        <p class="recap-card-title">{{ champion.past_event.title }}</p>
+                        <p class="recap-card-subtitle">{{ champion.player.name }}</p>
+                        <p class="recap-card-date">{{ champion.past_event.event_date|date:"Y-m-d" }}</p>
+                    </div>
+                </a>
                 {% endfor %}
             </div>
-        {% else %}
-            <div class="alert alert-warning" role="alert">
-                暂无赛段信息。
-            </div>
+        </div>
         {% endif %}
 
-        {% if recent_champions or recent_events %}
-        <div class="history-recap mt-5">
-            <h3 class="mb-4 text-center border-top pt-4">历史回顾</h3>
-
-            {% if recent_champions %}
-            <div class="recap-section">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h5 class="recap-title">历届冠军</h5>
-                    <a href="{% url 'past_champions_list' %}" class="btn btn-sm btn-outline-secondary">查看全部 &raquo;</a>
-                </div>
-                <div class="scroll-container">
-                    {% for champion in recent_champions %}
-                    <a href="{% url 'past_champion_detail' champion.pk %}" class="recap-card">
-                        <img src="{% if champion.poster %}{{ champion.poster.url }}{% else %}/static/images/no-image.png{% endif %}" alt="{{ champion.player.name }}">
-                        <div class="recap-card-body">
-                            <p class="recap-card-title">{{ champion.past_event.title }}</p>
-                            <p class="recap-card-subtitle">{{ champion.player.name }}</p>
-                            <p class="recap-card-date">{{ champion.past_event.event_date|date:"Y-m-d" }}</p>
-                        </div>
-                    </a>
-                    {% endfor %}
-                </div>
+        {% if recent_events %}
+        <div class="recap-section mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="recap-title">历届赛事</h5>
+                <a href="{% url 'past_events_list' %}" class="btn btn-sm btn-outline-secondary">查看全部 &raquo;</a>
             </div>
-            {% endif %}
-
-            {% if recent_events %}
-            <div class="recap-section mt-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h5 class="recap-title">历届赛事</h5>
-                    <a href="{% url 'past_events_list' %}" class="btn btn-sm btn-outline-secondary">查看全部 &raquo;</a>
-                </div>
-                <div class="scroll-container">
-                    {% for event in recent_events %}
-                    <a href="{% url 'past_event_detail' event.pk %}" class="recap-card">
-                        <img src="{% if event.poster %}{{ event.poster.url }}{% else %}/static/images/no-image.png{% endif %}" alt="{{ event.title }}">
-                        <div class="recap-card-body">
-                            <p class="recap-card-title">{{ event.title }}</p>
-                            <p class="recap-card-date">{{ event.event_date|date:"Y-m-d" }}</p>
-                        </div>
-                    </a>
-                    {% endfor %}
-                </div>
+            <div class="scroll-container">
+                {% for event in recent_events %}
+                <a href="{% url 'past_event_detail' event.pk %}" class="recap-card">
+                    <img src="{% if event.poster %}{{ event.poster.url }}{% else %}/static/images/no-image.png{% endif %}" alt="{{ event.title }}">
+                    <div class="recap-card-body">
+                        <p class="recap-card-title">{{ event.title }}</p>
+                        <p class="recap-card-date">{{ event.event_date|date:"Y-m-d" }}</p>
+                    </div>
+                </a>
+                {% endfor %}
             </div>
-            {% endif %}
         </div>
         {% endif %}
     </div>
-
-    <div class="col-md-4">
-        
-        {% if home_announcement %}
-        <div class="card mb-3">
-            <div class="card-header">
-                <h5 class="mb-0">赛事公告</h5>
-            </div>
-            <div class="card-body">
-                <h6 class="card-title">{{ home_announcement.title }}</h6>
-                <p class="card-text" style="white-space: pre-wrap;">{{ home_announcement.body|safe }}</p>
-            </div>
-        </div>
-        {% endif %}
-
-        {% if active_ads %}
-        <div classs="card mb-3">
-            <div class="card-header">
-                <h5 class="mb-0">宣传 / PROMO</h5>
-            </div>
-            <div class="card-body">
-                <div class="row g-2">
-                    {% for ad in active_ads %}
-                    <div class="col-6 col-md-12">
-                        <a href="{{ ad.url|default:'#' }}" target="_blank" rel="noopener noreferrer" class="promo-ad-link">
-                            <img src="{{ ad.poster.url }}" alt="{{ ad.title }}" class="img-fluid rounded promo-ad-poster">
-                        </a>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-        {% endif %}
-        </div>
-</div>
-
-<style>
-    .promo-ad-poster {
-        width: 100%;
-        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-        border: 1px solid #eee;
-    }
-    .promo-ad-poster:hover {
-        transform: scale(1.05); /* 鼠标悬浮时放大 5% */
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10;
-        position: relative; /* 确保放大时不会被遮挡 */
-    }
-    .promo-ad-link {
-        display: block; /* 确保链接填满栅格单元 */
-        margin-bottom: 0.5rem; /* 多个海报之间的间距 */
-    }
-</style>
+    {% endif %}
 {% endblock %}

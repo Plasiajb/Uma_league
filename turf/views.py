@@ -12,7 +12,7 @@ from .models import (
     Season, Stage, Event, Group, Heat, Result, Standing, Payout,
     Player, Enrollment, GroupMembership, PublishedRank, SelfReport,
     PastEvent, PastChampion,
-    PromoAd  # <-- 1. 导入 PromoAd 
+    PromoAd  # <-- 导入新模型
 )
 
 def landing_page(request):
@@ -46,7 +46,6 @@ def home(request):
     }
     return render(request, "guest/home.html", ctx)
 
-# ... (从 event_detail 到文件末尾的所有其他视图函数保持不变) ...
 def event_detail(request, event_id: int):
     event = get_object_or_404(Event, id=event_id)
     standings = Standing.objects.filter(event=event).order_by('rank')
@@ -129,7 +128,7 @@ def me(request):
         return redirect("player_profile", player_id=player.id)
     if request.method == "POST":
         pass
-    messages.info(request, "当前账号未绑定选手名，请先创建后再进入个人主页。")
+    messages.info(request, "当前账号未绑定选手名，请先创建后再进入个人主Y页。")
     return render(request, "guest/me.html", {"player": None})
 
 @login_required
@@ -294,7 +293,7 @@ def past_events_list(request):
     return render(request, "guest/past_events_list.html", {"events": all_events})
 
 def past_event_detail(request, pk: int):
-    """历届赛事详情页"""
+    """历G届赛事详情页"""
     event = get_object_or_404(PastEvent, pk=pk)
     # 尝试获取关联的冠军信息
     champion = PastChampion.objects.filter(past_event=event).first()
